@@ -22,6 +22,69 @@
         "dataset/view_sampler=evaluation"
       ],
       "console": "integratedTerminal"
+    },
+    {
+      "name": "DepthSplat Test on RE10K subset",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main",
+      "env": {
+        //"CUDA_VISIBLE_DEVICES": "2"
+        //"CUDA_VISIBLE_DEVICES": "0"
+        "CUDA_VISIBLE_DEVICES": "3"
+      },
+      "args": [
+        "+experiment=re10k",
+        "dataset.test_chunk_interval=1",
+        "dataset.roots=[datasets/re10k_subset]",
+        "model.encoder.num_scales=2",
+        "model.encoder.upsample_factor=2",
+        "model.encoder.lowest_feature_resolution=4",
+        "model.encoder.monodepth_vit_type=vitl",
+        "checkpointing.pretrained_model=pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth",
+        "mode=test",
+        "dataset/view_sampler=evaluation",
+        "dataset.view_sampler.index_path=assets/evaluation_index_re10k_video.json",
+        "test.save_video=true",
+        "test.compute_scores=false",
+        //"output_dir=outputs/depthsplat-re10k_256x256_run005_subset_vscode",
+        //"output_dir=outputs/depthsplat-re10k_256x256_run006_subset_vscode",
+        //"output_dir=outputs/depthsplat-re10k_256x256_run007_subset_vscode",
+        "output_dir=outputs/depthsplat-re10k_256x256_run008_subset_vscode",
+      ],
+      "console": "integratedTerminal",
+      "logToFile": true,
+      "redirectOutput": true
+    },
+    {
+      "name": "DepthSplat Alt inference pipeline",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main_2",
+      "env": {
+        //"CUDA_VISIBLE_DEVICES": "2"
+        //"CUDA_VISIBLE_DEVICES": "0"
+        "CUDA_VISIBLE_DEVICES": "3"
+      },
+      "args": [
+        "+experiment=re10k",
+        "dataset.test_chunk_interval=1",
+        "dataset.roots=[datasets/re10k_subset]",
+        "model.encoder.num_scales=2",
+        "model.encoder.upsample_factor=2",
+        "model.encoder.lowest_feature_resolution=4",
+        "model.encoder.monodepth_vit_type=vitl",
+        "checkpointing.pretrained_model=pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth",
+        "mode=test",
+        "dataset/view_sampler=evaluation",
+        "dataset.view_sampler.index_path=assets/evaluation_index_re10k_video.json",
+        "test.save_video=true",
+        "test.compute_scores=false",
+        "output_dir=outputs/depthsplat-re10k_256x256_run009_subset_vscode",
+      ],
+      "console": "integratedTerminal",
+      "logToFile": true,
+      "redirectOutput": true
     }
   ]
 }

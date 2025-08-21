@@ -137,12 +137,15 @@ class DatasetRE10k(IterableDataset):
                         extrinsics,
                         intrinsics,
                     )
+                    print("Sample is normal - running test as usual")
                 except ValueError:
                     # Skip because the example doesn't have enough frames.
+                    print("Skip because the example doesn't have enough frames.")
                     continue
 
                 # Skip the example if the field of view is too wide.
                 if (get_fov(intrinsics).rad2deg() > self.cfg.max_fov).any():
+                    print("Skipping because the FOV is too wide.")
                     continue
 
                 # Load the images.

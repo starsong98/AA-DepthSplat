@@ -41,7 +41,7 @@ mode=test \
 dataset/view_sampler=evaluation \
 dataset.view_sampler.index_path=assets/evaluation_index_re10k_video.json \
 test.save_video=true \
-test.compute_scores=false
+test.compute_scores=false \
 output_dir=outputs/depthsplat-re10k
 
 ############################################################
