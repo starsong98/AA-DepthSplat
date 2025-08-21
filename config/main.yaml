@@ -72,10 +72,10 @@ test:
   output_path: outputs/test
   compute_scores: true
   eval_time_skip_steps: 0
-  save_image: false
-  save_video: false
-  save_gt_image: false
-  save_input_images: false
+  save_image: true
+  save_video: true
+  save_gt_image: true
+  save_input_images: true
   save_depth: false
   save_depth_npy: false
   save_depth_concat_img: false
