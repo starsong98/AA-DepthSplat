@@ -113,22 +113,93 @@ export HYDRA_FULL_ERROR=1
 #output_dir=outputs/depthsplat-re10k-512x960_run011 2>&1 | tee outputs/20250821_run011_720p_subset.log
 
 # now to record metrics
-python -m src.main +experiment=dl3dv \
+#python -m src.main +experiment=dl3dv \
+#dataset.test_chunk_interval=1 \
+#dataset.roots=[datasets_extra/re10k_720p_test_subset] \
+#dataset.image_shape=[512,960] \
+#dataset.ori_image_shape=[720,1280] \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=8 \
+#model.encoder.monodepth_vit_type=vitb \
+#model.encoder.gaussian_adapter.gaussian_scale_max=0.1 \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-base-re10kdl3dv-448x768-randview2-6-f8ddd845.pth \
+#mode=test \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.num_context_views=6 \
+#dataset.view_sampler.index_path=assets/re10k_ctx_6v_video.json \
+#test.save_video=true \
+#test.compute_scores=true \
+#test.render_chunk_size=10 \
+#output_dir=outputs/depthsplat-re10k-512x960_run012 2>&1 | tee outputs/20250821_run012_720p_subset.log
+
+# same checkpoint, full test set, evaluation setting
+# now saving 1/4x ~ 4x scale GTs (actually 2x and 4x are not quite gts)
+# and metrics on all GTs
+#python -m src.main_2 +experiment=re10k \
+#dataset.test_chunk_interval=1 \
+#dataset.roots=[datasets/re10k] \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=2 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.monodepth_vit_type=vitl \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth \
+#mode=test \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.index_path=assets/evaluation_index_re10k.json \
+#test.save_video=false \
+#output_dir=outputs/depthsplat-re10k_256x256_simt_fullset_run006 \
+#2>&1 | tee outputs/20250825_run006_simtrender_fullset.log
+
+# acid subset testing...
+#python -m src.main_2 +experiment=re10k \
+#mode=test \
+#dataset.roots=[datasets/acid_subset] \
+#dataset.view_sampler.index_path=assets/evaluation_index_acid.json \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.num_context_views=2 \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=2 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.monodepth_vit_type=vitl \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth \
+#test.save_video=false \
+#output_dir=outputs/depthsplat-acid_256x256_simt_subset_run006 \
+#2>&1 | tee outputs/20250826_run001_simtrender_subset.log
+
+# acid full set testing...
+#python -m src.main_2 +experiment=re10k \
+#mode=test \
+#dataset.roots=[datasets_extra/acid] \
+#dataset.view_sampler.index_path=assets/evaluation_index_acid.json \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.num_context_views=2 \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=2 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.monodepth_vit_type=vitl \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth \
+#test.save_video=false \
+#output_dir=outputs/depthsplat-acid_256x256_simt_fullset_run002 \
+#2>&1 | tee outputs/20250826_run002_simtrender_acidfullset.log
+
+# dl3dv high-res video rendering, subset
+python -m src.main_2 +experiment=dl3dv \
 dataset.test_chunk_interval=1 \
-dataset.roots=[datasets_extra/re10k_720p_test_subset] \
+dataset.roots=[datasets_extra/dl3dv_960p_test_subset] \
 dataset.image_shape=[512,960] \
-dataset.ori_image_shape=[720,1280] \
-model.encoder.num_scales=2 \
-model.encoder.upsample_factor=4 \
+dataset.ori_image_shape=[540,960] \
+model.encoder.upsample_factor=8 \
 model.encoder.lowest_feature_resolution=8 \
-model.encoder.monodepth_vit_type=vitb \
 model.encoder.gaussian_adapter.gaussian_scale_max=0.1 \
-checkpointing.pretrained_model=pretrained/depthsplat-gs-base-re10kdl3dv-448x768-randview2-6-f8ddd845.pth \
+checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10kdl3dv-448x768-randview4-10-c08188db.pth \
 mode=test \
 dataset/view_sampler=evaluation \
-dataset.view_sampler.num_context_views=6 \
-dataset.view_sampler.index_path=assets/re10k_ctx_6v_video.json \
+dataset.view_sampler.num_context_views=12 \
+dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_100_ctx_12v_video.json \
 test.save_video=true \
-test.compute_scores=true \
+test.stablize_camera=true \
+test.compute_scores=false \
 test.render_chunk_size=10 \
-output_dir=outputs/depthsplat-re10k-512x960_run012 2>&1 | tee outputs/20250821_run012_720p_subset.log
+output_dir=outputs/depthsplat-dl3dv-512x960_subset_run002_simt \
+2>&1 | tee outputs/20250826_run002_simtrender_dl3dv960p_ctx12v_subset.log

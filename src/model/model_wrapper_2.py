@@ -1,5 +1,6 @@
 from .model_wrapper import *
 
+from ..dataset.shims.crop_shim import rescale
 
 class ModelWrapper2(ModelWrapper):
     def __init__(
@@ -120,7 +121,16 @@ class ModelWrapper2(ModelWrapper):
                         )
 
                         # 1/2 scale outputs
-                        curr_output_2 = self.decoder.forward(
+                        #curr_output_2 = self.decoder.forward(
+                        #    gaussians,
+                        #    camera_poses[:, start:end],
+                        #    render_intrinsics[:, start:end],
+                        #    render_near[:, start:end],
+                        #    render_far[:, start:end],
+                        #    (h//2, w//2),
+                        #    depth_mode=None,
+                        #)
+                        curr_output_1_2 = self.decoder.forward(
                             gaussians,
                             camera_poses[:, start:end],
                             render_intrinsics[:, start:end],
@@ -131,7 +141,16 @@ class ModelWrapper2(ModelWrapper):
                         )
 
                         # 1/4 scale outputs
-                        curr_output_4 = self.decoder.forward(
+                        #curr_output_4 = self.decoder.forward(
+                        #    gaussians,
+                        #    camera_poses[:, start:end],
+                        #    render_intrinsics[:, start:end],
+                        #    render_near[:, start:end],
+                        #    render_far[:, start:end],
+                        #    (h//4, w//4),
+                        #    depth_mode=None,
+                        #)
+                        curr_output_1_4 = self.decoder.forward(
                             gaussians,
                             camera_poses[:, start:end],
                             render_intrinsics[:, start:end],
@@ -141,10 +160,34 @@ class ModelWrapper2(ModelWrapper):
                             depth_mode=None,
                         )
 
+                        # 2x scale outputs
+                        curr_output_2 = self.decoder.forward(
+                            gaussians,
+                            camera_poses[:, start:end],
+                            render_intrinsics[:, start:end],
+                            render_near[:, start:end],
+                            render_far[:, start:end],
+                            (h*2, w*2),
+                            depth_mode=None,
+                        )
+
+                        # 4x scale outputs
+                        curr_output_4 = self.decoder.forward(
+                            gaussians,
+                            camera_poses[:, start:end],
+                            render_intrinsics[:, start:end],
+                            render_near[:, start:end],
+                            render_far[:, start:end],
+                            (h*4, w*4),
+                            depth_mode=None,
+                        )
+
                         if i == 0:
                             output = curr_output
                             output_2 = curr_output_2
                             output_4 = curr_output_4
+                            output_1_2 = curr_output_1_2
+                            output_1_4 = curr_output_1_4
 
                         else:
                             # ignore depth
@@ -156,6 +199,12 @@ class ModelWrapper2(ModelWrapper):
                             )
                             output_4.color = torch.cat(
                                 (output_4.color, curr_output_4.color), dim=1
+                            )
+                            output_1_2.color = torch.cat(
+                                (output_1_2.color, curr_output_1_2.color), dim=1
+                            )
+                            output_1_4.color = torch.cat(
+                                (output_1_4.color, curr_output_1_4.color), dim=1
                             )
 
                 # non-chunked renders
@@ -170,7 +219,7 @@ class ModelWrapper2(ModelWrapper):
                         depth_mode=None,
                     )
                     # 1/2 scale outputs
-                    output_2 = self.decoder.forward(
+                    output_1_2 = self.decoder.forward(
                         gaussians,
                         camera_poses,
                         batch["target"]["intrinsics"],
@@ -180,13 +229,33 @@ class ModelWrapper2(ModelWrapper):
                         depth_mode=None,
                     )
                     # 1/4 scale outputs
-                    output_4 = self.decoder.forward(
+                    output_1_4 = self.decoder.forward(
                         gaussians,
                         camera_poses,
                         batch["target"]["intrinsics"],
                         batch["target"]["near"],
                         batch["target"]["far"],
                         (h//4, w//4),
+                        depth_mode=None,
+                    )
+                    # 2x scale outputs
+                    output_2 = self.decoder.forward(
+                        gaussians,
+                        camera_poses,
+                        batch["target"]["intrinsics"],
+                        batch["target"]["near"],
+                        batch["target"]["far"],
+                        (h*2, w*2),
+                        depth_mode=None,
+                    )
+                    # 4x scale outputs
+                    output_4 = self.decoder.forward(
+                        gaussians,
+                        camera_poses,
+                        batch["target"]["intrinsics"],
+                        batch["target"]["near"],
+                        batch["target"]["far"],
+                        (h*4, w*4),
                         depth_mode=None,
                     )
 
@@ -248,8 +317,15 @@ class ModelWrapper2(ModelWrapper):
 
         images_prob = output.color[0]
         rgb_gt = batch["target"]["image"][0]    # [V, 3, H, W]
-        images_2_prob = output_2.color[0]   # 1/2 scale images
-        images_4_prob = output_4.color[0]   # 1/4 scale images
+        images_1_2_prob = output_1_2.color[0]   # 1/2 scale images
+        images_1_4_prob = output_1_4.color[0]   # 1/4 scale images
+        images_2_prob = output_2.color[0]   # 2x scale images
+        images_4_prob = output_4.color[0]   # 4x scale images
+        # referring to `src/dataset/shims/crop_shim.py`>L93 to prepare multi-scale 'GT's.
+        rgb_gt_1_2 = torch.stack([rescale(rgb_gt_one, (h//2, w//2)) for rgb_gt_one in rgb_gt])  # 1/2 scale GTs
+        rgb_gt_1_4 = torch.stack([rescale(rgb_gt_one, (h//4, w//4)) for rgb_gt_one in rgb_gt])  # 1/4 scale GTs
+        rgb_gt_2 = torch.stack([rescale(rgb_gt_one, (h*2, w*2)) for rgb_gt_one in rgb_gt])      # 2x scale GTs
+        rgb_gt_4 = torch.stack([rescale(rgb_gt_one, (h*4, w*4)) for rgb_gt_one in rgb_gt])      # 4x scale GTs
 
         # Save images.
         if self.test_cfg.save_image:
@@ -265,20 +341,33 @@ class ModelWrapper2(ModelWrapper):
             #        save_image(color, path / "images" / scene / f"color/{index:0>6}.png")
             # modified settings - multi scale saving
             if self.test_cfg.save_gt_image:
-                for index, color, color_2, color_4, gt in zip(
-                    batch["target"]["index"][0], images_prob, images_2_prob, images_4_prob, rgb_gt
+                for index, color, color_2, color_4, color_1_2, color_1_4, gt, gt_2, gt_4, gt_1_2, gt_1_4 in zip(
+                    batch["target"]["index"][0], 
+                    images_prob, images_2_prob, images_4_prob, images_1_2_prob, images_1_4_prob,
+                    rgb_gt, rgb_gt_2, rgb_gt_4, rgb_gt_1_2, rgb_gt_1_4
                 ):
                     save_image(color, path / "images" / scene / f"color/{index:0>6}.png")
                     save_image(gt, path / "images" / scene / f"color/{index:0>6}_gt.png")
                     #save_image(color_2, path / "images_2" / scene / f"color/{index:0>6}.png")
                     save_image(color_2, path / "images" / scene / f"color_2/{index:0>6}.png")
                     save_image(color_4, path / "images" / scene / f"color_4/{index:0>6}.png")
+                    save_image(color_1_2, path / "images" / scene / f"color_1_2/{index:0>6}.png")
+                    save_image(color_1_4, path / "images" / scene / f"color_1_4/{index:0>6}.png")
+                    save_image(gt_2, path / "images" / scene / f"color_2/{index:0>6}_gt.png")
+                    save_image(gt_4, path / "images" / scene / f"color_4/{index:0>6}_gt.png")
+                    save_image(gt_1_2, path / "images" / scene / f"color_1_2/{index:0>6}_gt.png")
+                    save_image(gt_1_4, path / "images" / scene / f"color_1_4/{index:0>6}_gt.png")
             else:
-                for index, color, color_2, color_4 in zip(batch["target"]["index"][0], images_prob, images_2_prob, images_4_prob):
+                for index, color, color_2, color_4, color_1_2, color_1_4 in zip(
+                    batch["target"]["index"][0],
+                    images_prob, images_2_prob, images_4_prob, images_1_2_prob, images_1_4_prob
+                ):
                     save_image(color, path / "images" / scene / f"color/{index:0>6}.png")
                     #save_image(color_2, path / "images_2" / scene / f"color/{index:0>6}.png")
                     save_image(color_2, path / "images" / scene / f"color_2/{index:0>6}.png")
                     save_image(color_4, path / "images" / scene / f"color_4/{index:0>6}.png")
+                    save_image(color_1_2, path / "images" / scene / f"color_1_2/{index:0>6}.png")
+                    save_image(color_1_4, path / "images" / scene / f"color_1_4/{index:0>6}.png")
 
         # save video
         if self.test_cfg.save_video:
@@ -288,12 +377,26 @@ class ModelWrapper2(ModelWrapper):
                 [a for a in images_prob],
                 path / "videos" / f"{scene}_frame_{frame_str}.mp4",
             )
-            # TODO multi scale
+            # 2x scale
             save_video(
                 [a for a in images_2_prob],
                 path / "videos_2" / f"{scene}_frame_{frame_str}.mp4",
             )
-
+            # 4x scale
+            save_video(
+                [a for a in images_4_prob],
+                path / "videos_4" / f"{scene}_frame_{frame_str}.mp4",
+            )
+            # 1/2 scale
+            save_video(
+                [a for a in images_1_2_prob],
+                path / "videos_1_2" / f"{scene}_frame_{frame_str}.mp4",
+            )
+            # 1/4 scale
+            save_video(
+                [a for a in images_1_4_prob],
+                path / "videos_1_4" / f"{scene}_frame_{frame_str}.mp4",
+            )
 
         # compute scores
         if self.test_cfg.compute_scores:
@@ -306,11 +409,24 @@ class ModelWrapper2(ModelWrapper):
 
                 if f"psnr" not in self.test_step_outputs:
                     self.test_step_outputs[f"psnr"] = []
+                    self.test_step_outputs[f"psnr_2"] = []
+                    self.test_step_outputs[f"psnr_4"] = []
+                    self.test_step_outputs[f"psnr_1_2"] = []
+                    self.test_step_outputs[f"psnr_1_4"] = []
                 if f"ssim" not in self.test_step_outputs:
                     self.test_step_outputs[f"ssim"] = []
+                    self.test_step_outputs[f"ssim_2"] = []
+                    self.test_step_outputs[f"ssim_4"] = []
+                    self.test_step_outputs[f"ssim_1_2"] = []
+                    self.test_step_outputs[f"ssim_1_4"] = []
                 if f"lpips" not in self.test_step_outputs:
                     self.test_step_outputs[f"lpips"] = []
+                    self.test_step_outputs[f"lpips_2"] = []
+                    self.test_step_outputs[f"lpips_4"] = []
+                    self.test_step_outputs[f"lpips_1_2"] = []
+                    self.test_step_outputs[f"lpips_1_4"] = []
 
+                # native scale metrics - original
                 self.test_step_outputs[f"psnr"].append(
                     compute_psnr(rgb_gt, rgb).mean().item()
                 )
@@ -320,3 +436,44 @@ class ModelWrapper2(ModelWrapper):
                 self.test_step_outputs[f"lpips"].append(
                     compute_lpips(rgb_gt, rgb).mean().item()
                 )
+                # 2x scale metrics
+                self.test_step_outputs[f"psnr_2"].append(
+                    compute_psnr(rgb_gt_2, images_2_prob).mean().item()
+                )
+                self.test_step_outputs[f"ssim_2"].append(
+                    compute_ssim(rgb_gt_2, images_2_prob).mean().item()
+                )
+                self.test_step_outputs[f"lpips_2"].append(
+                    compute_lpips(rgb_gt_2, images_2_prob).mean().item()
+                )
+                # 4x scale metrics
+                self.test_step_outputs[f"psnr_4"].append(
+                    compute_psnr(rgb_gt_4, images_4_prob).mean().item()
+                )
+                self.test_step_outputs[f"ssim_4"].append(
+                    compute_ssim(rgb_gt_4, images_4_prob).mean().item()
+                )
+                self.test_step_outputs[f"lpips_4"].append(
+                    compute_lpips(rgb_gt_4, images_4_prob).mean().item()
+                )
+                # 1/2 scale metrics
+                self.test_step_outputs[f"psnr_1_2"].append(
+                    compute_psnr(rgb_gt_1_2, images_1_2_prob).mean().item()
+                )
+                self.test_step_outputs[f"ssim_1_2"].append(
+                    compute_ssim(rgb_gt_1_2, images_1_2_prob).mean().item()
+                )
+                self.test_step_outputs[f"lpips_1_2"].append(
+                    compute_lpips(rgb_gt_1_2, images_1_2_prob).mean().item()
+                )
+                # 1/4 scale metrics
+                self.test_step_outputs[f"psnr_1_4"].append(
+                    compute_psnr(rgb_gt_1_4, images_1_4_prob).mean().item()
+                )
+                self.test_step_outputs[f"ssim_1_4"].append(
+                    compute_ssim(rgb_gt_1_4, images_1_4_prob).mean().item()
+                )
+                self.test_step_outputs[f"lpips_1_4"].append(
+                    compute_lpips(rgb_gt_1_4, images_1_4_prob).mean().item()
+                )
+
