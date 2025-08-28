@@ -184,6 +184,27 @@ export HYDRA_FULL_ERROR=1
 #2>&1 | tee outputs/20250826_run002_simtrender_acidfullset.log
 
 # dl3dv high-res video rendering, subset
+#python -m src.main_2 +experiment=dl3dv \
+#dataset.test_chunk_interval=1 \
+#dataset.roots=[datasets_extra/dl3dv_960p_test_subset] \
+#dataset.image_shape=[512,960] \
+#dataset.ori_image_shape=[540,960] \
+#model.encoder.upsample_factor=8 \
+#model.encoder.lowest_feature_resolution=8 \
+#model.encoder.gaussian_adapter.gaussian_scale_max=0.1 \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10kdl3dv-448x768-randview4-10-c08188db.pth \
+#mode=test \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.num_context_views=12 \
+#dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_100_ctx_12v_video.json \
+#test.save_video=true \
+#test.stablize_camera=true \
+#test.compute_scores=false \
+#test.render_chunk_size=10 \
+#output_dir=outputs/depthsplat-dl3dv-512x960_subset_run002_simt \
+#2>&1 | tee outputs/20250826_run002_simtrender_dl3dv960p_ctx12v_subset.log
+
+# dl3dv high-res video rendering, subset
 python -m src.main_2 +experiment=dl3dv \
 dataset.test_chunk_interval=1 \
 dataset.roots=[datasets_extra/dl3dv_960p_test_subset] \
@@ -198,8 +219,8 @@ dataset/view_sampler=evaluation \
 dataset.view_sampler.num_context_views=12 \
 dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_100_ctx_12v_video.json \
 test.save_video=true \
-test.stablize_camera=true \
+test.stablize_camera=false \
 test.compute_scores=false \
-test.render_chunk_size=10 \
-output_dir=outputs/depthsplat-dl3dv-512x960_subset_run002_simt \
-2>&1 | tee outputs/20250826_run002_simtrender_dl3dv960p_ctx12v_subset.log
+test.render_chunk_size=5 \
+output_dir=outputs/depthsplat-dl3dv-512x960_subset_run003_simt \
+2>&1 | tee outputs/20250826_run003_simtrender_dl3dv960p_ctx12v_subset.log

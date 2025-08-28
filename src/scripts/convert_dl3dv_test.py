@@ -29,9 +29,9 @@ parser.add_argument(
         "images_8",
     ],
 )
-parser.add_argument("--n_test", type=int, default=10, help="test skip")
-parser.add_argument("--which_stage", type=str, default=None, help="dataset directory")
-parser.add_argument("--detect_overlap", action="store_true")
+parser.add_argument("--n_test", type=int, default=10, help="test skip")     # they never use this - TW
+parser.add_argument("--which_stage", type=str, default=None, help="dataset directory")  # they never use this - TW
+parser.add_argument("--detect_overlap", action="store_true")    # they never use this - TW
 
 args = parser.parse_args()
 

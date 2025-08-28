@@ -82,4 +82,3 @@ model.encoder.monodepth_vit_type=vitl \
 checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vitl.pth \
 checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
 output_dir=checkpoints/re10k-256x256-depthsplat-large
-

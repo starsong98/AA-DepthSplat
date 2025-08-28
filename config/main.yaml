@@ -6,9 +6,10 @@ defaults:
   - loss: [mse]
 
 wandb:
-  project: depthsplat
-  entity: placeholder
-  name: placeholder
+  #project: depthsplat
+  project: depthsplat_re10k
+  entity: starsong98-korea-advanced-institute-of-science-and-techn
+  name: baseline-training-001
   mode: online
   id: null
 

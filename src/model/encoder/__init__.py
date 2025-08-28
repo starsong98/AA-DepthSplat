@@ -7,6 +7,7 @@ from .visualization.encoder_visualizer_depthsplat import EncoderVisualizerDepthS
 
 ENCODERS = {
     "depthsplat": (EncoderDepthSplat, EncoderVisualizerDepthSplat),
+    # "depthsplat_lpf": (EncoderDepthSplatLPF, EncoderVisualizerDepthSplat)
 }
 
 EncoderCfg = EncoderDepthSplatCfg
