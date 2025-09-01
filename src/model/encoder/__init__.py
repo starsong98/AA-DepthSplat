@@ -2,12 +2,15 @@ from typing import Optional
 
 from .encoder import Encoder
 from .encoder_depthsplat import EncoderDepthSplat, EncoderDepthSplatCfg
+from .encoder_dummy import EncoderDummy
+from .encoder_depthsplat_lpf import EncoderDepthSplatLPF
 from .visualization.encoder_visualizer import EncoderVisualizer
 from .visualization.encoder_visualizer_depthsplat import EncoderVisualizerDepthSplat
 
 ENCODERS = {
     "depthsplat": (EncoderDepthSplat, EncoderVisualizerDepthSplat),
-    # "depthsplat_lpf": (EncoderDepthSplatLPF, EncoderVisualizerDepthSplat)
+    "dummy": (EncoderDummy, EncoderVisualizerDepthSplat),
+    "depthsplat_lpf": (EncoderDepthSplatLPF, EncoderVisualizerDepthSplat)
 }
 
 EncoderCfg = EncoderDepthSplatCfg
