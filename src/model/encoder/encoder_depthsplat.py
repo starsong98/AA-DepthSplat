@@ -23,7 +23,8 @@ from .unimatch.dpt_head import DPTHead
 
 @dataclass
 class EncoderDepthSplatCfg:
-    name: Literal["depthsplat"]
+    #name: Literal["depthsplat"]
+    name: Literal["depthsplat", "dummy", "depthsplat_lpf"]
     d_feature: int
     num_depth_candidates: int
     num_surfaces: int

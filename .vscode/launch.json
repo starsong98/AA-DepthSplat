@@ -87,6 +87,98 @@
       "console": "integratedTerminal",
       "logToFile": true,
       "redirectOutput": true
-    }
+    },
+    {
+      "name": "Toy dataset training",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main_2",
+      "env": {
+        "CUDA_VISIBLE_DEVICES": "1",
+      },
+      "args": [
+        "+experiment=re10k",
+        "data_loader.train.batch_size=4",
+        "dataset.test_chunk_interval=10",
+        "dataset.roots=[datasets/re10k_subset]",
+        "train.extended_visualization=true",
+        "trainer.max_steps=600",
+        //"trainer.val_check_interval=0.25",
+        "optimizer.train_gs_head_only=true",
+        "model.encoder.upsample_factor=4",
+        "model.encoder.lowest_feature_resolution=4",
+        //"checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth",
+        //"checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth",
+        "checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth",
+        //"output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_013_ft-ms-val",
+        //"output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_015_ft-ms-val",
+        //"output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_017_ft-ms-val",
+        "output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_019_optimizer",
+        "wandb.project=depthsplat_re10k_debug",
+        "wandb.name=baseline-subset-small-ft-010",
+      ]
+    },
+    {
+      "name": "New model (encoder) architecture",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main_2",
+      "env": {
+        "CUDA_VISIBLE_DEVICES": "1",
+      },
+      "args": [
+        "+experiment=re10k",
+        //"data_loader.train.batch_size=4",
+        "data_loader.train.batch_size=8",
+        "dataset.test_chunk_interval=10",
+        "dataset.roots=[datasets/re10k_subset]",
+        "train.extended_visualization=true",
+        "trainer.max_steps=600",
+        "optimizer.train_gs_head_only=true",
+        "model.encoder.name=depthsplat_lpf",
+        "model.encoder.upsample_factor=4",
+        "model.encoder.lowest_feature_resolution=4",
+        //"checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth",
+        //"checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth",
+        "checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth",
+        //"output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_020_dummyencoder",
+        //"output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_021_gshead-thruput",
+        "output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_022_gshead-thruput",
+        "wandb.project=depthsplat_re10k_debug",
+        "wandb.name=baseline-subset-small-ft-010",
+      ]
+    },
+    {
+      "name": "DepthSplat Alt inference pipeline + new architecture",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main_2",
+      "env": {
+        //"CUDA_VISIBLE_DEVICES": "2"
+        "CUDA_VISIBLE_DEVICES": "0"
+        //"CUDA_VISIBLE_DEVICES": "3"
+      },
+      "args": [
+        "+experiment=re10k",
+        "dataset.test_chunk_interval=1",
+        "dataset.roots=[datasets/re10k_subset]",
+        "model.encoder.name=depthsplat_lpf",
+        "model.encoder.num_scales=2",
+        "model.encoder.upsample_factor=2",
+        "model.encoder.lowest_feature_resolution=4",
+        "model.encoder.monodepth_vit_type=vitl",
+        "checkpointing.pretrained_model=pretrained/depthsplat-gs-large-re10k-256x256-view2-e0f0f27a.pth",
+        "mode=test",
+        "dataset/view_sampler=evaluation",
+        "dataset.view_sampler.index_path=assets/evaluation_index_re10k_video.json",
+        "test.save_video=true",
+        "test.compute_scores=false",
+        //"output_dir=outputs/depthsplat-re10k_256x256_run009_subset_vscode",
+        "output_dir=outputs/20250831_depthsplat_debug_3Dfilters_run001",
+      ],
+      "console": "integratedTerminal",
+      "logToFile": true,
+      "redirectOutput": true
+    },
   ]
 }

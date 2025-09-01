@@ -56,6 +56,8 @@ class OptimizerCfg:
     warm_up_steps: int
     lr_monodepth: float
     weight_decay: float
+    # new addition - you have to fix this too
+    train_gs_head_only: bool
 
 
 @dataclass

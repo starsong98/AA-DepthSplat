@@ -477,3 +477,239 @@ class ModelWrapper2(ModelWrapper):
                     compute_lpips(rgb_gt_1_4, images_1_4_prob).mean().item()
                 )
 
+    @rank_zero_only
+    def render_video_generic(
+        self,
+        batch: BatchedExample,
+        trajectory_fn: TrajectoryFn,
+        name: str,
+        num_frames: int = 30,
+        smooth: bool = True,
+        loop_reverse: bool = True,
+    ) -> None:
+        # Render probabilistic estimate of scene.
+        gaussians_prob = self.encoder(batch["context"], self.global_step, False)
+        # gaussians_det = self.encoder(batch["context"], self.global_step, True)
+
+        if isinstance(gaussians_prob, dict):
+            gaussians_prob = gaussians_prob["gaussians"]
+
+        t = torch.linspace(0, 1, num_frames, dtype=torch.float32, device=self.device)
+        if smooth:
+            t = (torch.cos(torch.pi * (t + 1)) + 1) / 2
+
+        extrinsics, intrinsics = trajectory_fn(t)
+
+        _, _, _, h, w = batch["context"]["image"].shape
+
+        # Color-map the result.
+        def depth_map(result):
+            near = result[result > 0][:16_000_000].quantile(0.01).log()
+            far = result.view(-1)[:16_000_000].quantile(0.99).log()
+            result = result.log()
+            result = 1 - (result - near) / (far - near)
+            return apply_color_map_to_image(result, "turbo")
+
+        near = repeat(batch["context"]["near"][:, 0], "b -> b v", v=num_frames)
+        far = repeat(batch["context"]["far"][:, 0], "b -> b v", v=num_frames)
+        # native resolution video (same as original)
+        output_prob = self.decoder.forward(
+            gaussians_prob, extrinsics, intrinsics, near, far, (h, w), "depth"
+        )
+        # 1/4 res.
+        output_prob_1_4 = self.decoder.forward(
+            gaussians_prob, extrinsics, intrinsics, near, far, (h//4, w//4), "depth"
+        )
+        # 2x res.
+        output_prob_2 = self.decoder.forward(
+            gaussians_prob, extrinsics, intrinsics, near, far, (h*2, w*2), "depth"
+        )
+        # 4x res.
+        #output_prob_4 = self.decoder.forward(
+        #    gaussians_prob, extrinsics, intrinsics, near, far, (h*4, w*4), "depth"
+        #)
+
+        # native res.
+        images_prob = [
+            vcat(rgb, depth)
+            for rgb, depth in zip(output_prob.color[0], depth_map(output_prob.depth[0]))
+        ]
+        images_prob_1_4 = [
+            vcat(rgb, depth)
+            for rgb, depth in zip(output_prob_1_4.color[0], depth_map(output_prob_1_4.depth[0]))
+        ]
+        images_prob_2 = [
+            vcat(rgb, depth)
+            for rgb, depth in zip(output_prob_2.color[0], depth_map(output_prob_2.depth[0]))
+        ]
+        #images_prob_4 = [
+        #    vcat(rgb, depth)
+        #    for rgb, depth in zip(output_prob_4.color[0], depth_map(output_prob_4.depth[0]))
+        #]
+
+        images = [
+            add_border(
+                hcat(
+                    add_label(image_prob, "Prediction"),
+                )
+            )
+            for image_prob, _ in zip(images_prob, images_prob)
+        ]
+        images_1_4 = [
+            add_border(
+                hcat(
+                    add_label(image_prob, "Prediction (1/4x)", font_size=12),
+                )
+            )
+            for image_prob, _ in zip(images_prob_1_4, images_prob_1_4)
+        ]
+        images_2 = [
+            add_border(
+                hcat(
+                    add_label(image_prob, "Prediction (2x)", font_size=36),
+                )
+            )
+            for image_prob, _ in zip(images_prob_2, images_prob_2)
+        ]
+        #images_4 = [
+        #    add_border(
+        #        hcat(
+        #            add_label(image_prob, "Prediction (4x)", font_size=72),
+        #        )
+        #    )
+        #    for image_prob, _ in zip(images_prob_4, images_prob_4)
+        #]
+
+        video = torch.stack(images)
+        video_1_4 = torch.stack(images_1_4)
+        video_2 = torch.stack(images_2)
+        #video_4 = torch.stack(images_4)
+        video = (video.clip(min=0, max=1) * 255).type(torch.uint8).cpu().numpy()
+        video_1_4 = (video_1_4.clip(min=0, max=1) * 255).type(torch.uint8).cpu().numpy()
+        video_2 = (video_2.clip(min=0, max=1) * 255).type(torch.uint8).cpu().numpy()
+        #video_4 = (video_4.clip(min=0, max=1) * 255).type(torch.uint8).cpu().numpy()
+        if loop_reverse:
+            video = pack([video, video[::-1][1:-1]], "* c h w")[0]
+            video_1_4 = pack([video_1_4, video_1_4[::-1][1:-1]], "* c h w")[0]
+            video_2 = pack([video_2, video_2[::-1][1:-1]], "* c h w")[0]
+            #video_4 = pack([video_4, video_4[::-1][1:-1]], "* c h w")[0]
+        visualizations = {
+            f"video/{name}": wandb.Video(video[None], fps=30, format="mp4"), # native res. - original
+            f"video_1_4/{name}": wandb.Video(video_1_4[None], fps=30, format="mp4"),
+            f"video_2/{name}": wandb.Video(video_2[None], fps=30, format="mp4")
+            #f"video/{name}_4": wandb.Video(video_4[None], fps=30, format="mp4")
+        }
+
+        # Since the PyTorch Lightning doesn't support video logging, log to wandb directly.
+        try:
+            wandb.log(visualizations)
+        except Exception:
+            assert isinstance(self.logger, LocalLogger)
+            for key, value in visualizations.items():
+                tensor = value._prepare_video(value.data)
+                clip = mpy.ImageSequenceClip(list(tensor), fps=value._fps)
+                dir = LOG_PATH / key
+                dir.mkdir(exist_ok=True, parents=True)
+                clip.write_videofile(
+                    str(dir / f"{self.global_step:0>6}.mp4"), logger=None
+                )
+    
+    def configure_optimizers(self):
+        if getattr(self.optimizer_cfg, "train_gs_head_only", False):
+            print("Finetuning only the GS head params")
+            gs_head_params = []
+            updated_names = []
+            frozen_names = []
+
+            for name, param in self.named_parameters():
+                if "feature_upsampler" in name:
+                    gs_head_params.append(param)
+                    updated_names.append(name)
+                    #print(f"Will be added to optimizer - {name}")
+                elif "gaussian" in name:
+                    gs_head_params.append(param)
+                    updated_names.append(name)
+                    #print(f"Will be added to optimizer - {name}")
+                else:
+                    param.requires_grad = False
+                    frozen_names.append(name)
+            
+            print("The following params will be updated during training:")
+            for name in updated_names:
+                print(f"\t{name}")
+            print("")
+            print("The following params will be frozen during training:")
+            for name in frozen_names:
+                print(f"\t{name}")
+            
+            optimizer = torch.optim.AdamW(
+                gs_head_params,
+                lr=self.optimizer_cfg.lr,
+                weight_decay=self.optimizer_cfg.weight_decay,
+            )
+
+            scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                optimizer,
+                self.optimizer_cfg.lr,
+                self.trainer.max_steps + 10,
+                pct_start=0.01,
+                cycle_momentum=False,
+                anneal_strategy="cos",
+            )
+            
+        else:
+            # vanilla cases
+            if self.optimizer_cfg.lr_monodepth > 0:
+                pretrained_params = []
+                new_params = []
+
+                for name, param in self.named_parameters():
+                    if "pretrained" in name:
+                        pretrained_params.append(param)
+                    else:
+                        new_params.append(param)
+
+                optimizer = torch.optim.AdamW(
+                    [
+                        {
+                            "params": pretrained_params,
+                            "lr": self.optimizer_cfg.lr_monodepth,
+                        },
+                        {"params": new_params, "lr": self.optimizer_cfg.lr},
+                    ],
+                    weight_decay=self.optimizer_cfg.weight_decay,
+                )
+
+                scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                    optimizer,
+                    [self.optimizer_cfg.lr_monodepth, self.optimizer_cfg.lr],
+                    self.trainer.max_steps + 10,
+                    pct_start=0.01,
+                    cycle_momentum=False,
+                    anneal_strategy="cos",
+                )
+
+            else:
+                optimizer = optim.AdamW(
+                    self.parameters(),
+                    lr=self.optimizer_cfg.lr,
+                    weight_decay=self.optimizer_cfg.weight_decay,
+                )
+
+                scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                    optimizer,
+                    self.optimizer_cfg.lr,
+                    self.trainer.max_steps + 10,
+                    pct_start=0.01,
+                    cycle_momentum=False,
+                    anneal_strategy="cos",
+                )
+
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+                "frequency": 1,
+            },
+        }
