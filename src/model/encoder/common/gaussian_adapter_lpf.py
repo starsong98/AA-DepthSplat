@@ -52,7 +52,10 @@ class GaussianAdapterLPF(GaussianAdapter):
         filter_3D = self.compute_3D_filters(extrinsics, intrinsics, means, input_images, depths)
 
         # TODO new scales & opacities
-        opacities, scales = self.get_opacity_scaling_with_3D_filter(opacities, scales, filter_3D)
+        if self.cfg.compensate_opacities:
+            opacities, scales = self.get_opacity_scaling_with_3D_filter(opacities, scales, filter_3D)
+        else:
+            scales = self.get_scaling_with_3D_filter(scales, filter_3D)
 
         # Create world-space covariance matrices.
         covariances = build_covariance(scales, rotations)
@@ -185,9 +188,21 @@ class GaussianAdapterLPF(GaussianAdapter):
     #    # https://github1s.com/autonomousvision/mip-splatting/blob/main/scene/gaussian_model.py#L125-L137
     #    # TODO
     #    return
-    #
-    #def get_scaling_with_3D_filter(self, scales, 3D_filters):
-    #    # Based on:
-    #    # https://github1s.com/autonomousvision/mip-splatting/blob/main/scene/gaussian_model.py#L99-L105
-    #    # TODO
-    #    return
+    
+    def get_scaling_with_3D_filter(
+        self,
+        scales: Float[Tensor, "*#batch 3"],     # [B, V, H*W, 1, 1, 3]
+        filter_3D: Float[Tensor, "*#batch"],    # [B, V, H*W, 1, 1]
+    ):
+        # Based on:
+        # https://github1s.com/autonomousvision/mip-splatting/blob/main/scene/gaussian_model.py#L99-L105
+        
+        # now apply 3d filter
+        scales_square = torch.square(scales)
+
+        scales_after_square = scales_square + torch.square(filter_3D)[..., None]
+
+        # modified scales
+        scales_filtered = torch.sqrt(scales_after_square)   # [B, V, H*W, 1, 1, 3]
+
+        return scales_filtered

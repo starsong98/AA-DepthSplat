@@ -26,6 +26,8 @@ class GaussianAdapterCfg:
     gaussian_scale_min: float
     gaussian_scale_max: float
     sh_degree: int
+    # new additions
+    compensate_opacities: bool
 
 
 class GaussianAdapter(nn.Module):
