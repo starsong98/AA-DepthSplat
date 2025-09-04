@@ -2,6 +2,7 @@ from ...dataset import DatasetCfg
 from .decoder import Decoder
 from .decoder_splatting_cuda import DecoderSplattingCUDA, DecoderSplattingCUDACfg
 #from .decoder_mipsplatting_cuda import DecoderMipSplattingCUDA, DecoderMipSplattingCUDACfg
+#from .decoder_gslpat_cuda import DecoderGSplatCUDA, DecoderGSplatCUDACfg
 
 DECODERS = {
     "splatting_cuda": DecoderSplattingCUDA,
