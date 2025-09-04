@@ -236,17 +236,67 @@ export HYDRA_FULL_ERROR=1
 #output_dir=outputs/depthsplat-S-re10k_256x256_fullset_run001_simt \
 #2>&1 | tee outputs/20250828_run001_simt_re10k_fullset_smallmodel.log
 
+# base model baseline establishment
+#python -m src.main_2 +experiment=re10k \
+#dataset.test_chunk_interval=1 \
+#dataset.roots=[datasets/re10k] \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=2 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.monodepth_vit_type=vitb \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-base-re10k-256x256-view2-ca7b6795.pth \
+#mode=test \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.index_path=assets/evaluation_index_re10k.json \
+#test.save_video=false \
+#output_dir=outputs/depthsplat-B-re10k_256x256_fullset_run001_simt \
+#2>&1 | tee outputs/20250829_run001_simt_re10k_fullset_basemodel.log
+
+# small model + 3D LPF w/o ft
+# ignore this - did not actually give 3D LPF
+#python -m src.main_2 +experiment=re10k \
+#dataset.test_chunk_interval=1 \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
+#mode=test \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.index_path=assets/evaluation_index_re10k.json \
+#test.save_video=false \
+#output_dir=outputs/depthsplat-3DLPF-Small-re10k_256x256_simt_fullset_run001 \
+#2>&1 | tee outputs/20250901_run001_simtrender_fullset_3DLPF_small.log
+
+# small model + 3D LPF w/o ft
+# ignore this - did not actually give 3D LPF
+#python -m src.main_2 +experiment=re10k \
+#dataset.test_chunk_interval=1 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
+#mode=test \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.index_path=assets/evaluation_index_re10k.json \
+#test.save_video=false \
+#output_dir=outputs/20250902_run004_re10k-256x256-simt-fullset_3DLPF-Small \
+#2>&1 | tee outputs/20250902_run004_re10k-256x256-simt-fullset_3DLPF-Small.log
+
+# RE10k 256x256, small checkpoint
+# DepthSplat + 3D LPF, same rasterizer
+# GS head only finetuned, 100k steps x batch size 8 x 2 GPUs
+# toy test set
 python -m src.main_2 +experiment=re10k \
 dataset.test_chunk_interval=1 \
-dataset.roots=[datasets/re10k] \
-model.encoder.num_scales=2 \
-model.encoder.upsample_factor=2 \
+dataset.roots=[datasets/re10k_subset] \
+model.encoder.name=depthsplat_lpf \
+model.encoder.upsample_factor=4 \
 model.encoder.lowest_feature_resolution=4 \
-model.encoder.monodepth_vit_type=vitb \
-checkpointing.pretrained_model=pretrained/depthsplat-gs-base-re10k-256x256-view2-ca7b6795.pth \
+model.encoder.gaussian_adapter.compensate_opacities=false \
+checkpointing.pretrained_model=checkpoints/re10k-256x256-depthsplat_small_GSLPF_GSHeadft_005/checkpoints/epoch_12-step_100000.ckpt \
 mode=test \
 dataset/view_sampler=evaluation \
 dataset.view_sampler.index_path=assets/evaluation_index_re10k.json \
 test.save_video=false \
-output_dir=outputs/depthsplat-B-re10k_256x256_fullset_run001_simt \
-2>&1 | tee outputs/20250829_run001_simt_re10k_fullset_basemodel.log
+output_dir=outputs/2025-09-03_run002_re10k-256x256-simt-subset_3DLPF-GSHeadft-Small \
+2>&1 | tee outputs/2025-09-03_run002_re10k-256x256-simt-subset_3DLPF-GSHeadft-Small.log
