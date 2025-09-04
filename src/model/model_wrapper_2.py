@@ -658,52 +658,131 @@ class ModelWrapper2(ModelWrapper):
             )
             
         else:
-            # vanilla cases
-            if self.optimizer_cfg.lr_monodepth > 0:
-                pretrained_params = []
-                new_params = []
+            # full model is to be trained/finetuned
+            if self.optimizer_cfg.lr_gshead > 0:
+                # GS heads get their own learning rates
+                if self.optimizer_cfg.lr_monodepth > 0:
+                    # monocular branch gets its own learning rate
+                    pretrained_params = []
+                    new_params = []
+                    gs_head_params = []
 
-                for name, param in self.named_parameters():
-                    if "pretrained" in name:
-                        pretrained_params.append(param)
-                    else:
-                        new_params.append(param)
+                    for name, param in self.named_parameters():
+                        if "pretrained" in name:
+                            pretrained_params.append(param)
+                        elif "gaussian" in name:
+                            gs_head_params.append(param)
+                        else:
+                            new_params.append(param)
 
-                optimizer = torch.optim.AdamW(
-                    [
-                        {
-                            "params": pretrained_params,
-                            "lr": self.optimizer_cfg.lr_monodepth,
-                        },
-                        {"params": new_params, "lr": self.optimizer_cfg.lr},
-                    ],
-                    weight_decay=self.optimizer_cfg.weight_decay,
-                )
+                    optimizer = torch.optim.AdamW(
+                        [
+                            {
+                                "params": pretrained_params,
+                                "lr": self.optimizer_cfg.lr_monodepth,
+                            },
+                            {
+                                "params": gs_head_params,
+                                "lr": self.optimizer_cfg.lr_gshead,
+                            },
+                            {"params": new_params, "lr": self.optimizer_cfg.lr},
+                        ],
+                        weight_decay=self.optimizer_cfg.weight_decay,
+                    )
 
-                scheduler = torch.optim.lr_scheduler.OneCycleLR(
-                    optimizer,
-                    [self.optimizer_cfg.lr_monodepth, self.optimizer_cfg.lr],
-                    self.trainer.max_steps + 10,
-                    pct_start=0.01,
-                    cycle_momentum=False,
-                    anneal_strategy="cos",
-                )
+                    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                        optimizer,
+                        [
+                            self.optimizer_cfg.lr_monodepth,
+                            self.optimizer_cfg.lr_gshead,
+                            self.optimizer_cfg.lr
+                        ],
+                        self.trainer.max_steps + 10,
+                        pct_start=0.01,
+                        cycle_momentum=False,
+                        anneal_strategy="cos",
+                    )
 
+                else:
+                    # the entire depth backbone (i.e., everything except for the GS head) gets the same lr
+                    depth_params = []
+                    gs_head_params = []
+
+                    for name, param in self.named_parameters():
+                        if "gaussian" in name:
+                            gs_head_params.append(param)
+                        else:
+                            depth_params.append(param)
+
+                    optimizer = torch.optim.AdamW(
+                        [
+                            {
+                                "params": gs_head_params,
+                                "lr": self.optimizer_cfg.lr_gshead,
+                            },
+                            {"params": depth_params, "lr": self.optimizer_cfg.lr},
+                        ],
+                        weight_decay=self.optimizer_cfg.weight_decay,
+                    )
+
+                    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                        optimizer,
+                        [
+                            self.optimizer_cfg.lr_gshead,
+                            self.optimizer_cfg.lr
+                        ],
+                        self.trainer.max_steps + 10,
+                        pct_start=0.01,
+                        cycle_momentum=False,
+                        anneal_strategy="cos",
+                    )
             else:
-                optimizer = optim.AdamW(
-                    self.parameters(),
-                    lr=self.optimizer_cfg.lr,
-                    weight_decay=self.optimizer_cfg.weight_decay,
-                )
+                # vanilla cases
+                if self.optimizer_cfg.lr_monodepth > 0:
+                    pretrained_params = []
+                    new_params = []
 
-                scheduler = torch.optim.lr_scheduler.OneCycleLR(
-                    optimizer,
-                    self.optimizer_cfg.lr,
-                    self.trainer.max_steps + 10,
-                    pct_start=0.01,
-                    cycle_momentum=False,
-                    anneal_strategy="cos",
-                )
+                    for name, param in self.named_parameters():
+                        if "pretrained" in name:
+                            pretrained_params.append(param)
+                        else:
+                            new_params.append(param)
+
+                    optimizer = torch.optim.AdamW(
+                        [
+                            {
+                                "params": pretrained_params,
+                                "lr": self.optimizer_cfg.lr_monodepth,
+                            },
+                            {"params": new_params, "lr": self.optimizer_cfg.lr},
+                        ],
+                        weight_decay=self.optimizer_cfg.weight_decay,
+                    )
+
+                    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                        optimizer,
+                        [self.optimizer_cfg.lr_monodepth, self.optimizer_cfg.lr],
+                        self.trainer.max_steps + 10,
+                        pct_start=0.01,
+                        cycle_momentum=False,
+                        anneal_strategy="cos",
+                    )
+
+                else:
+                    optimizer = optim.AdamW(
+                        self.parameters(),
+                        lr=self.optimizer_cfg.lr,
+                        weight_decay=self.optimizer_cfg.weight_decay,
+                    )
+
+                    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                        optimizer,
+                        self.optimizer_cfg.lr,
+                        self.trainer.max_steps + 10,
+                        pct_start=0.01,
+                        cycle_momentum=False,
+                        anneal_strategy="cos",
+                    )
 
         return {
             "optimizer": optimizer,

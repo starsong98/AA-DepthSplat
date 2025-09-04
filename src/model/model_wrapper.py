@@ -58,6 +58,7 @@ class OptimizerCfg:
     weight_decay: float
     # new addition - you have to fix this too
     train_gs_head_only: bool
+    lr_gshead: float
 
 
 @dataclass

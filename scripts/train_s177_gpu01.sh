@@ -171,19 +171,57 @@ export WANDB_API_KEY=3e47c12c726946688f60a01031af30854ae44216
 # Disabling opacity compensation
 # JMP's hyperparam recommendations: 100k steps(compared to original 600k), same LR.
 # 2x 4090s (24GB) for 600K steps, batch size 4 on each gpu
+#python -m src.main_2 +experiment=re10k \
+#data_loader.train.batch_size=8 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=50000 \
+#trainer.val_check_interval=0.25 \
+#optimizer.train_gs_head_only=true \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
+#output_dir=checkpoints/re10k-256x256-depthsplat_small_GSLPF_GSHeadft_004 \
+#wandb.project=depthsplat_re10k \
+#wandb.name=GSLPF-small-GSHeadft-004_20250901 \
+#2>&1 | tee checkpoints/20250901_GSLPF_GSHeadft_small_full_004.log
+
+# longer training
+#python -m src.main_2 +experiment=re10k \
+#data_loader.train.batch_size=8 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=100000 \
+#trainer.val_check_interval=0.25 \
+#optimizer.train_gs_head_only=true \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
+#output_dir=checkpoints/re10k-256x256-depthsplat_small_GSLPF_GSHeadft_005 \
+#wandb.project=depthsplat_re10k \
+#wandb.name=GSLPF-small-GSHeadft-005_20250902 \
+#2>&1 | tee checkpoints/20250901_GSLPF_GSHeadft_small_full_005.log
+
+# Full model finetuning
 python -m src.main_2 +experiment=re10k \
-data_loader.train.batch_size=8 \
+data_loader.train.batch_size=4 \
 dataset.test_chunk_interval=10 \
 train.extended_visualization=true \
-trainer.max_steps=50000 \
+trainer.max_steps=100000 \
 trainer.val_check_interval=0.25 \
-optimizer.train_gs_head_only=true \
+optimizer.train_gs_head_only=false \
+optimizer.lr_gshead=2e-4 \
+optimizer.lr=1e-4 \
+optimizer.lr_monodepth=1e-6 \
 model.encoder.name=depthsplat_lpf \
 model.encoder.upsample_factor=4 \
 model.encoder.lowest_feature_resolution=4 \
 model.encoder.gaussian_adapter.compensate_opacities=false \
 checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
-output_dir=checkpoints/re10k-256x256-depthsplat_small_GSLPF_GSHeadft_004 \
 wandb.project=depthsplat_re10k \
-wandb.name=GSLPF-small-GSHeadft-004_20250901 \
-2>&1 | tee checkpoints/20250901_GSLPF_GSHeadft_small_full_004.log
+output_dir=checkpoints/2025-09-04_run003_re10k-256x256_depthsplat-Small-3DLPF-Fullft \
+2>&1 | tee checkpoints/2025-09-04_run003_re10k-256x256_depthsplat-Small-3DLPF-Fullft.log
