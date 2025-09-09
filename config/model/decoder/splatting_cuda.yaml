@@ -1,1 +1,5 @@
 name: splatting_cuda
+# new additions
+#make_scale_invariant: true
+rasterize_mode: classic
+eps2d: 0.3

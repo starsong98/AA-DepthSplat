@@ -1,6 +1,9 @@
 {
   "version": "0.2.0",
   "configurations": [
+    
+
+
     {
       "name": "DepthSplat Test on RE10K",
       "type": "python",
@@ -182,6 +185,45 @@
         //"output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_021_gshead-thruput",
         //"output_dir=checkpoints/re10k-256x256-depthsplat-small_trials_022_gshead-thruput",
         "output_dir=checkpoints/2025-09-04_run001_re10k-256x256_depthsplat-small_debug-gshead-separate-lr",
+        "wandb.project=depthsplat_re10k_debug",
+        //"wandb.name=baseline-subset-small-ft-010",
+      ]
+    },
+    {
+      "name": "3D LPF + gsplat decoder, trials",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main_2",
+      "justMyCode": false,
+      "env": {
+        "CUDA_VISIBLE_DEVICES": "1",
+      },
+      "args": [
+        "+experiment=re10k",
+        "data_loader.train.batch_size=4",
+        //"data_loader.train.batch_size=8",
+        "dataset.test_chunk_interval=10",
+        "dataset.roots=[datasets/re10k_subset]",
+        "train.extended_visualization=true",
+        //"trainer.max_steps=600",
+        "trainer.max_steps=100",
+        "trainer.num_sanity_val_steps=0",
+        //"optimizer.train_gs_head_only=true",
+        "optimizer.train_gs_head_only=false",
+        "optimizer.lr_gshead=2e-4",
+        "optimizer.lr=1e-4",
+        "optimizer.lr_monodepth=1e-6",
+        "model.encoder.name=depthsplat_lpf", // loading alternate encoder
+        "model.encoder.upsample_factor=4",
+        "model.encoder.lowest_feature_resolution=4",
+        "model.decoder.name=splatting_cuda_anysplat", // loading alternate decoder
+        "model.decoder.rasterize_mode=antialiased",
+        "model.decoder.eps2d=0.1",
+        //"checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth",
+        //"checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth",
+        "checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth",
+        //"output_dir=checkpoints/2025-09-07_run001_re10k-256x256_depthsplat-small_debug-gsplat",
+        "output_dir=checkpoints/2025-09-08_run001_re10k-256x256_depthsplat-small_debug-gsplat",
         "wandb.project=depthsplat_re10k_debug",
         //"wandb.name=baseline-subset-small-ft-010",
       ]

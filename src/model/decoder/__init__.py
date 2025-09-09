@@ -2,14 +2,14 @@ from ...dataset import DatasetCfg
 from .decoder import Decoder
 from .decoder_splatting_cuda import DecoderSplattingCUDA, DecoderSplattingCUDACfg
 #from .decoder_mipsplatting_cuda import DecoderMipSplattingCUDA, DecoderMipSplattingCUDACfg
-#from .decoder_gslpat_cuda import DecoderGSplatCUDA, DecoderGSplatCUDACfg
+from .decoder_anysplat_cuda import DecoderSplattingCUDAAnySplat, DecoderSplattingCUDAAnySplatCfg
 
 DECODERS = {
     "splatting_cuda": DecoderSplattingCUDA,
-    #"mipsplatting_cuda": DecoderMipSplattingCUDA,
+    "splatting_cuda_anysplat": DecoderSplattingCUDAAnySplat,
 }
 
-DecoderCfg = DecoderSplattingCUDACfg #| DecoderMipSplattingCUDACfg
+DecoderCfg = DecoderSplattingCUDACfg | DecoderSplattingCUDAAnySplatCfg
 
 
 def get_decoder(decoder_cfg: DecoderCfg, dataset_cfg: DatasetCfg) -> Decoder:
