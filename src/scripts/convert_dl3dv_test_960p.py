@@ -29,9 +29,9 @@ parser.add_argument(
         "images_8",
     ],
 )
-parser.add_argument("--n_test", type=int, default=10, help="test skip")
-parser.add_argument("--which_stage", type=str, default=None, help="dataset directory")
-parser.add_argument("--detect_overlap", action="store_true")
+parser.add_argument("--n_test", type=int, default=10, help="test skip")     # they never use this - TW
+parser.add_argument("--which_stage", type=str, default=None, help="dataset directory")  # they never use this - TW
+parser.add_argument("--detect_overlap", action="store_true")    # they never use this - TW
 
 args = parser.parse_args()
 
@@ -53,7 +53,6 @@ def get_example_keys(stage: Literal["test", "train"]) -> list[str]:
     # keys = image_keys & metadata_keys
     keys = image_keys
     # print(keys)
-    # assert False
     print(f"Found {len(keys)} keys.")
     return sorted(list(keys))
 
@@ -157,10 +156,10 @@ def is_image_shape_matched(image_dir, target_shape):
 
 def legal_check_for_all_scenes(root_dir, target_shape):
     valid_folders = []
-    sub_folders = sorted(glob(os.path.join(root_dir, "*/*")))
+    sub_folders = sorted(glob(os.path.join(root_dir, "*/nerfstudio")))
     for sub_folder in tqdm(sub_folders, desc="checking scenes..."):
-        img_dir = os.path.join(sub_folder, 'images_8')
-        #img_dir = os.path.join(sub_folder, "images_4")
+        # img_dir = os.path.join(sub_folder, "images_8")  # 270x480
+        img_dir = os.path.join(sub_folder, 'images_4')  # 540x960
         if not is_image_shape_matched(Path(img_dir), target_shape):
             print(f"image shape does not match for {sub_folder}")
             continue
@@ -186,14 +185,7 @@ if __name__ == "__main__":
     valid_scenes = legal_check_for_all_scenes(INPUT_DIR, target_shape)
     print("valid scenes:", len(valid_scenes))
 
-    # test scenes
-    test_scenes = "your_test_set_index.json"
-    with open(test_scenes, "r") as f:
-        overlap_scenes = json.load(f)
-
-    assert len(overlap_scenes) == 140, "test scenes should contain 140 scenes"
-
-    for stage in ["train"]:
+    for stage in ["test"]:
 
         error_logs = []
         image_dirs = valid_scenes
@@ -218,14 +210,10 @@ if __name__ == "__main__":
             chunk = []
 
         for image_dir in tqdm(image_dirs, desc=f"Processing {stage}"):
-            key = os.path.basename(image_dir.strip("/"))
-            # skip test scenes
-            if key in overlap_scenes:
-                print(f"scene {key} in benchmark, skip.")
-                continue
+            key = os.path.basename(os.path.dirname(image_dir.strip("/")))
 
-            image_dir = Path(image_dir) / "images_8"  # 270x480
-            #image_dir = Path(image_dir) / 'images_4'  # 540x960
+            #image_dir = Path(image_dir) / "images_8"  # 270x480
+            image_dir = Path(image_dir) / 'images_4'  # 540x960
 
             num_bytes = get_size(image_dir)
 
@@ -255,7 +243,7 @@ if __name__ == "__main__":
                 continue
 
             # Add the key to the example.
-            example["key"] = "dl3dv_" + key
+            example["key"] = key
 
             chunk.append(example)
             chunk_size += num_bytes

@@ -32,6 +32,14 @@ parser.add_argument(
 parser.add_argument("--n_test", type=int, default=10, help="test skip")
 parser.add_argument("--which_stage", type=str, default=None, help="dataset directory")
 parser.add_argument("--detect_overlap", action="store_true")
+# new addition(s) - because hardcoding is just bs
+parser.add_argument(
+    "--test_scenes_json",
+    type=str,
+    default="your_test_set_index.json",
+    help="path to json file directory"
+)
+
 
 args = parser.parse_args()
 
@@ -159,8 +167,9 @@ def legal_check_for_all_scenes(root_dir, target_shape):
     valid_folders = []
     sub_folders = sorted(glob(os.path.join(root_dir, "*/*")))
     for sub_folder in tqdm(sub_folders, desc="checking scenes..."):
-        img_dir = os.path.join(sub_folder, 'images_8')
+        #img_dir = os.path.join(sub_folder, 'images_8')
         #img_dir = os.path.join(sub_folder, "images_4")
+        img_dir = os.path.join(sub_folder, args.img_subdir)
         if not is_image_shape_matched(Path(img_dir), target_shape):
             print(f"image shape does not match for {sub_folder}")
             continue
@@ -187,7 +196,8 @@ if __name__ == "__main__":
     print("valid scenes:", len(valid_scenes))
 
     # test scenes
-    test_scenes = "your_test_set_index.json"
+    #test_scenes = "your_test_set_index.json"
+    test_scenes = args.test_scenes_json
     with open(test_scenes, "r") as f:
         overlap_scenes = json.load(f)
 
@@ -224,8 +234,9 @@ if __name__ == "__main__":
                 print(f"scene {key} in benchmark, skip.")
                 continue
 
-            image_dir = Path(image_dir) / "images_8"  # 270x480
+            #image_dir = Path(image_dir) / "images_8"  # 270x480
             #image_dir = Path(image_dir) / 'images_4'  # 540x960
+            image_dir = Path(image_dir) / args.img_subdir  # 270x480 or 540x960, depends
 
             num_bytes = get_size(image_dir)
 

@@ -158,8 +158,8 @@ def legal_check_for_all_scenes(root_dir, target_shape):
     valid_folders = []
     sub_folders = sorted(glob(os.path.join(root_dir, "*/nerfstudio")))
     for sub_folder in tqdm(sub_folders, desc="checking scenes..."):
-        # img_dir = os.path.join(sub_folder, "images_8")  # 270x480
-        img_dir = os.path.join(sub_folder, 'images_4')  # 540x960
+        img_dir = os.path.join(sub_folder, "images_8")  # 270x480
+        #img_dir = os.path.join(sub_folder, 'images_4')  # 540x960
         if not is_image_shape_matched(Path(img_dir), target_shape):
             print(f"image shape does not match for {sub_folder}")
             continue
@@ -212,8 +212,8 @@ if __name__ == "__main__":
         for image_dir in tqdm(image_dirs, desc=f"Processing {stage}"):
             key = os.path.basename(os.path.dirname(image_dir.strip("/")))
 
-            #image_dir = Path(image_dir) / "images_8"  # 270x480
-            image_dir = Path(image_dir) / 'images_4'  # 540x960
+            image_dir = Path(image_dir) / "images_8"  # 270x480
+            #image_dir = Path(image_dir) / 'images_4'  # 540x960
 
             num_bytes = get_size(image_dir)
 
