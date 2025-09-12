@@ -299,7 +299,8 @@ export WANDB_API_KEY=3e47c12c726946688f60a01031af30854ae44216
 # 3D LPF + 2D AA via gsplat
 # full model training from scratch
 # same hyperparams as prev. run.
-python -m src.main_2 +experiment=re10k \
+# this indeed caused zombie processes
+python -m src.main_3 +experiment=re10k \
 data_loader.train.batch_size=4 \
 dataset.test_chunk_interval=10 \
 train.extended_visualization=true \
@@ -315,5 +316,5 @@ model.decoder.eps2d=0.1 \
 checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
 checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
 wandb.project=depthsplat_re10k_debug \
-output_dir=checkpoints/2025-09-12_train001_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch \
-2>&1 | tee checkpoints/2025-09-12_train001_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch.log
+output_dir=checkpoints/2025-09-12_train002_-debug-zombie-prevention \
+2>&1 | tee checkpoints/2025-09-12_train002_-debug-zombie-prevention.log
