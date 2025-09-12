@@ -46,9 +46,54 @@
 #2>&1 | tee datasets_extra/20250901_dl3dv_generate_960p_test_try004-001.log
 
 # if the test scenes were not processed properly, neither can the training split. wonderful.
-python src/scripts/convert_dl3dv_train.py \
---input_dir datasets_extra/dl3dv_downloads_3 \
---output_dir datasets_extra/dl3dv_960p \
---img_subdir images_4 \
-2>&1 | tee datasets_extra/20250901_dl3dv_convert_960p_train_try001.log
+#python src/scripts/convert_dl3dv_train.py \
+#--input_dir datasets_extra/dl3dv_downloads_3 \
+#--output_dir datasets_extra/dl3dv_960p \
+#--img_subdir images_4 \
+#2>&1 | tee datasets_extra/20250901_dl3dv_convert_960p_train_try001.log
 
+# 480p, test split
+# failed because that one scene was 135x240 instead of 270x480
+#python src/scripts/convert_dl3dv_test.py \
+#--input_dir datasets_extra/dl3dv_downloads_4 \
+#--output_dir datasets_extra/dl3dv_480p \
+#--img_subdir images_8 \
+#2>&1 | tee datasets_extra/20250904_dl3dv_convert_480p_test_try001.log
+
+### AFTER MANUAL REARRANGING
+
+# 480p, test split
+# manually switched that one scene now
+# NOW it worked
+#python src/scripts/convert_dl3dv_test.py \
+#--input_dir datasets_extra/dl3dv_downloads_4 \
+#--output_dir datasets_extra/dl3dv_480p \
+#--img_subdir images_8 \
+#2>&1 | tee datasets_extra/20250904_dl3dv_convert_480p_test_try002.log
+
+# now generating index for that split
+#python src/scripts/generate_dl3dv_index_480p_test.py \
+#2>&1 | tee datasets_extra/20250904_dl3dv_index_480p_test_try002-001.log
+
+# 480p, training split
+#python src/scripts/convert_dl3dv_train.py \
+#--input_dir datasets_extra/dl3dv_downloads_4 \
+#--output_dir datasets_extra/dl3dv_480p \
+#--img_subdir images_8 \
+#2>&1 | tee datasets_extra/20250904_dl3dv_convert_480p_train_try001.log
+
+# 480p, training split
+# trying out new script
+#python src/scripts/convert_dl3dv_train_v2.py \
+#--input_dir datasets_extra/dl3dv_downloads \
+#--output_dir datasets_extra/dl3dv_480p \
+#--img_subdir images_8 \
+#--test_scenes_json datasets_extra/dl3dv_480p/test/index.json \
+#2>&1 | tee datasets_extra/20250904_dl3dv_convert_480p_train_try002.log
+
+# 480p, training split index generation
+# trying out new script
+python src/scripts/generate_dl3dv_index_v3.py \
+--dataset_path datasets_extra/dl3dv_480p \
+--stage train \
+2>&1 | tee datasets_extra/20250905_dl3dv_index_480p_train_try002-001.log
