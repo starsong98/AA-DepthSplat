@@ -300,7 +300,50 @@ export WANDB_API_KEY=3e47c12c726946688f60a01031af30854ae44216
 # same hyperparams as prev. run.
 # but with the 3D opacity computation left in.
 # see for real if it really makes the model shoot itself in the foot.
-python -m src.main_2 +experiment=re10k \
+# aaand I just used the old glitchy trainer again. When I kill this I will have to do that manual thing to clean memory.
+#python -m src.main_2 +experiment=re10k \
+#data_loader.train.batch_size=4 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=600000 \
+#trainer.val_check_interval=0.25 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=true \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
+#checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+#wandb.project=depthsplat_re10k \
+#output_dir=checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch \
+#2>&1 | tee checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch.log
+
+# resuming because that run crashed
+#python -m src.main_3 +experiment=re10k \
+#data_loader.train.batch_size=4 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=600000 \
+#trainer.val_check_interval=0.25 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=true \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
+#checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+#checkpointing.resume=true \
+#wandb.id=6aexzjnm \
+#wandb.project=depthsplat_re10k \
+#output_dir=checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch \
+#2>&1 | tee checkpoints/2025-09-12_train004-resume1_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch.log
+
+# resuming again... is something really broken?
+python -m src.main_3 +experiment=re10k \
 data_loader.train.batch_size=4 \
 dataset.test_chunk_interval=10 \
 train.extended_visualization=true \
@@ -315,9 +358,11 @@ model.decoder.rasterize_mode=antialiased \
 model.decoder.eps2d=0.1 \
 checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
 checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+checkpointing.resume=true \
+wandb.id=6aexzjnm \
 wandb.project=depthsplat_re10k \
 output_dir=checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch \
-2>&1 | tee checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch.log
+2>&1 | tee checkpoints/2025-09-12_train004-resume2_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch.log
 
 # actually gonna use this for debugging purposes - gotta fix that zombie process problem
 # 3D LPF + 2D AA via gsplat
