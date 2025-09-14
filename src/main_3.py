@@ -18,6 +18,12 @@ from pytorch_lightning.loggers.wandb import WandbLogger
 
 from pytorch_lightning.plugins.environments import LightningEnvironment
 
+# for zombie process prevention from keyboardinterrupts
+import signal
+import sys
+import atexit
+import torch.multiprocessing as mp
+
 
 # Configure beartype and jaxtyping.
 with install_import_hook(
@@ -43,12 +49,54 @@ def cyan(text: str) -> str:
     return f"{Fore.CYAN}{text}{Fore.RESET}"
 
 
+# for zombie process prevention from keyboardinterrupts
+def cleanup_handler():
+    """Clean up GPU memory and processes"""
+    print("Cleaning up GPU memory and processes...")
+    
+    # Clean up CUDA memory
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        for i in range(torch.cuda.device_count()):
+            torch.cuda.set_device(i)
+            torch.cuda.empty_cache()
+    
+    # Clean up multiprocessing
+    for p in mp.active_children():
+        try:
+            p.terminate()
+            p.join(timeout=5)
+            if p.is_alive():
+                p.kill()
+        except:
+            pass
+    
+    # Clean up distributed training
+    if torch.distributed.is_initialized():
+        try:
+            torch.distributed.destroy_process_group()
+        except:
+            pass
+
+def signal_handler(signum, frame):
+    """Handle interrupt signals gracefully"""
+    print(f"\nReceived signal {signum}, initiating cleanup...")
+    cleanup_handler()
+    sys.exit(0)
+
+
 @hydra.main(
     version_base=None,
     config_path="../config",
     config_name="main",
 )
 def train(cfg_dict: DictConfig):
+    # Set up signal handlers FIRST
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    atexit.register(cleanup_handler)
+
+    # ... rest of the existing code ...
     if cfg_dict["mode"] == "train" and cfg_dict["train"]["eval_model_every_n_val"] > 0:
         eval_cfg_dict = copy.deepcopy(cfg_dict)
         dataset_dir = str(cfg_dict["dataset"]["roots"]).lower()
@@ -245,8 +293,17 @@ def train(cfg_dict: DictConfig):
                     f"Loaded pretrained depth: {cfg.checkpointing.pretrained_depth}"
                 )
             )
-            
-        trainer.fit(model_wrapper, datamodule=data_module, ckpt_path=checkpoint_path)
+        
+        try:
+            trainer.fit(model_wrapper, datamodule=data_module, ckpt_path=checkpoint_path)
+        except KeyboardInterrupt:
+            print("KeyboardInterrupt received, cleaning up...")
+            cleanup_handler()
+            raise
+        except Exception as e:
+            print(f"Training failed with error: {e}")
+            cleanup_handler()
+            raise
     else:
         # load full model
         if cfg.checkpointing.pretrained_model is not None:

@@ -251,24 +251,193 @@ export WANDB_API_KEY=3e47c12c726946688f60a01031af30854ae44216
 # 3D LPF + 2D AA via gsplat
 # full model finetuning
 # same hyperparams as prev. run.
-python -m src.main_2 +experiment=re10k \
+#python -m src.main_2 +experiment=re10k \
+#data_loader.train.batch_size=4 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=200000 \
+#trainer.val_check_interval=0.25 \
+#optimizer.train_gs_head_only=false \
+#optimizer.lr_gshead=2e-4 \
+#optimizer.lr=2e-5 \
+#optimizer.lr_monodepth=1e-6 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
+#wandb.project=depthsplat_re10k \
+#output_dir=checkpoints/2025-09-08_train001_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullft \
+#2>&1 | tee checkpoints/2025-09-08_train001_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullft.log
+
+# 3D LPF + 2D AA via gsplat
+# full model training from scratch
+# same hyperparams as prev. run.
+#python -m src.main_2 +experiment=re10k \
+#data_loader.train.batch_size=4 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=600000 \
+#trainer.val_check_interval=0.25 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
+#checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+#wandb.project=depthsplat_re10k \
+#output_dir=checkpoints/2025-09-09_train002_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch \
+#2>&1 | tee checkpoints/2025-09-09_train002_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch.log
+
+# 3D LPF + 2D AA via gsplat
+# full model training from 'scratch'
+# same hyperparams as prev. run.
+# but with the 3D opacity computation left in.
+# see for real if it really makes the model shoot itself in the foot.
+# aaand I just used the old glitchy trainer again. When I kill this I will have to do that manual thing to clean memory.
+#python -m src.main_2 +experiment=re10k \
+#data_loader.train.batch_size=4 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=600000 \
+#trainer.val_check_interval=0.25 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=true \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
+#checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+#wandb.project=depthsplat_re10k \
+#output_dir=checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch \
+#2>&1 | tee checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch.log
+
+# resuming because that run crashed
+#python -m src.main_3 +experiment=re10k \
+#data_loader.train.batch_size=4 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=600000 \
+#trainer.val_check_interval=0.25 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=true \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
+#checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+#checkpointing.resume=true \
+#wandb.id=6aexzjnm \
+#wandb.project=depthsplat_re10k \
+#output_dir=checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch \
+#2>&1 | tee checkpoints/2025-09-12_train004-resume1_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch.log
+
+# resuming again... is something really broken?
+python -m src.main_3 +experiment=re10k \
 data_loader.train.batch_size=4 \
 dataset.test_chunk_interval=10 \
 train.extended_visualization=true \
-trainer.max_steps=200000 \
+trainer.max_steps=600000 \
 trainer.val_check_interval=0.25 \
-optimizer.train_gs_head_only=false \
-optimizer.lr_gshead=2e-4 \
-optimizer.lr=2e-5 \
-optimizer.lr_monodepth=1e-6 \
 model.encoder.name=depthsplat_lpf \
 model.encoder.upsample_factor=4 \
 model.encoder.lowest_feature_resolution=4 \
-model.encoder.gaussian_adapter.compensate_opacities=false \
+model.encoder.gaussian_adapter.compensate_opacities=true \
 model.decoder.name=splatting_cuda_anysplat \
 model.decoder.rasterize_mode=antialiased \
 model.decoder.eps2d=0.1 \
-checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
+checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
+checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+checkpointing.resume=true \
+wandb.id=6aexzjnm \
 wandb.project=depthsplat_re10k \
-output_dir=checkpoints/2025-09-08_train001_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullft \
-2>&1 | tee checkpoints/2025-09-08_train001_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullft.log
+output_dir=checkpoints/2025-09-12_train004_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch \
+2>&1 | tee checkpoints/2025-09-12_train004-resume2_re10k-256x256_depthsplat-Small-3DLPF-opac-2DMip-Fullscratch.log
+
+# actually gonna use this for debugging purposes - gotta fix that zombie process problem
+# 3D LPF + 2D AA via gsplat
+# full model training from scratch
+# same hyperparams as prev. run.
+# this indeed caused zombie processes
+#python -m src.main_3 +experiment=re10k \
+#data_loader.train.batch_size=4 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=600000 \
+#trainer.val_check_interval=0.25 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vits.pth \
+#checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+#wandb.project=depthsplat_re10k_debug \
+#output_dir=checkpoints/2025-09-12_train002_-debug-zombie-prevention \
+#2>&1 | tee checkpoints/2025-09-12_train002_-debug-zombie-prevention.log
+
+# 3D LPF + 2D AA via gsplat
+# full (Base) model training from scratch
+# same hyperparams as prev. run.
+# just trying out batch sizes...
+# bs=4/gpu gets me OOM on 4090. wonderful.
+#python -m src.main_3 +experiment=re10k \
+#data_loader.train.batch_size=4 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=600000 \
+#trainer.val_check_interval=0.25 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=2 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.monodepth_vit_type=vitb \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vitb.pth \
+#checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+#wandb.project=depthsplat_re10k_debug \
+#output_dir=checkpoints/2025-09-12_train003_re10k-256x256_depthsplat-Base-3DLPF-2DMip-Fullscratch \
+#2>&1 | tee checkpoints/2025-09-12_train003_re10k-256x256_depthsplat-Base-3DLPF-2DMip-Fullscratch.log
+
+# 3D LPF + 2D AA via gsplat
+# full (Base) model training from scratch
+# same hyperparams as prev. run.
+# just trying out batch sizes...
+# approx. 4.6 hours per epoch, 35~36 epochs total ~= 7 days training on 2x 4090s.
+# we can forget about this for now
+#python -m src.main_3 +experiment=re10k \
+#data_loader.train.batch_size=2 \
+#dataset.test_chunk_interval=10 \
+#train.extended_visualization=true \
+#trainer.max_steps=1200000 \
+#trainer.val_check_interval=0.25 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=2 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.monodepth_vit_type=vitb \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vitb.pth \
+#checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+#wandb.project=depthsplat_re10k_debug \
+#output_dir=checkpoints/2025-09-12_train003_re10k-256x256_depthsplat-Base-3DLPF-2DMip-Fullscratch \
+#2>&1 | tee checkpoints/2025-09-12_train003_re10k-256x256_depthsplat-Base-3DLPF-2DMip-Fullscratch.log
+
