@@ -32,7 +32,7 @@ parser.add_argument(
 parser.add_argument("--n_test", type=int, default=10, help="test skip")
 parser.add_argument("--which_stage", type=str, default=None, help="dataset directory")
 parser.add_argument("--detect_overlap", action="store_true")
-# new addition(s) - because hardcoding is just bs
+# new addition(s) - because hardcoding is absurd
 parser.add_argument(
     "--test_scenes_json",
     type=str,

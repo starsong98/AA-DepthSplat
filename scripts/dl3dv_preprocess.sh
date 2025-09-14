@@ -60,6 +60,7 @@
 #--img_subdir images_8 \
 #2>&1 | tee datasets_extra/20250904_dl3dv_convert_480p_test_try001.log
 
+
 ### AFTER MANUAL REARRANGING
 
 # 480p, test split
@@ -93,7 +94,28 @@
 
 # 480p, training split index generation
 # trying out new script
+# a bunch of samples were left out, but I guess that's fair for now.
+#python src/scripts/generate_dl3dv_index_v3.py \
+#--dataset_path datasets_extra/dl3dv_480p \
+#--stage train \
+#2>&1 | tee datasets_extra/20250905_dl3dv_index_480p_train_try002-001.log
+
+
+### 960P, AFTER MANUAL REARRANGING
+
+# 960p, test split
+# manually switched that one scene now
+# worked well
+#python src/scripts/convert_dl3dv_test_v2.py \
+#--input_dir datasets_extra/dl3dv_downloads_3 \
+#--output_dir datasets_extra/dl3dv_960p \
+#--img_subdir images_4 \
+#2>&1 | tee datasets_extra/20250910_dl3dv_convert_960p_test_try002.log
+
+# 480p, test split index generation
+# trying out (the same) new script
+# all accounted for?
 python src/scripts/generate_dl3dv_index_v3.py \
---dataset_path datasets_extra/dl3dv_480p \
---stage train \
-2>&1 | tee datasets_extra/20250905_dl3dv_index_480p_train_try002-001.log
+--dataset_path datasets_extra/dl3dv_960p \
+--stage test \
+2>&1 | tee datasets_extra/20250910_dl3dv_index_960p_test_try002-001.log
