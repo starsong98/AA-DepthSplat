@@ -341,16 +341,46 @@ export HYDRA_FULL_ERROR=1
 # DepthSplat + 3D LPF, same rasterizer
 # GS head only finetuned, 100k steps x batch size 8 x 2 GPUs
 # full test set
+#python -m src.main_2 +experiment=re10k \
+#dataset.test_chunk_interval=1 \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#checkpointing.pretrained_model=checkpoints/re10k-256x256-depthsplat_small_GSLPF_GSHeadft_005/checkpoints/epoch_12-step_100000.ckpt \
+#mode=test \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.index_path=assets/evaluation_index_re10k.json \
+#test.save_video=false \
+#output_dir=outputs/20250903_run001_re10k-256x256-simt-fullset_3DLPF-GSHeadft-Small \
+#2>&1 | tee outputs/20250903_run001_re10k-256x256-simt-fullset_3DLPF-GSHeadft-Small.log
+
+############################################################
+# RE10k 2x256x256 --> ACID 2x256x256 zeroshot full test set
+############################################################
+
+# RE10k 256x256 --> ACID 256x256 zero-shot full test set
+# Full mip-splatting + depthsplat (Small); 'second baseline'
+# skip upsampled rendering, retain upsampled scores
+# skip image saving for now, just compute metrics quickly
 python -m src.main_2 +experiment=re10k \
-dataset.test_chunk_interval=1 \
+mode=test \
+dataset.roots=[datasets_extra/acid] \
+dataset.view_sampler.index_path=assets/evaluation_index_acid.json \
+dataset/view_sampler=evaluation \
+dataset.view_sampler.num_context_views=2 \
 model.encoder.name=depthsplat_lpf \
 model.encoder.upsample_factor=4 \
 model.encoder.lowest_feature_resolution=4 \
 model.encoder.gaussian_adapter.compensate_opacities=false \
-checkpointing.pretrained_model=checkpoints/re10k-256x256-depthsplat_small_GSLPF_GSHeadft_005/checkpoints/epoch_12-step_100000.ckpt \
-mode=test \
-dataset/view_sampler=evaluation \
-dataset.view_sampler.index_path=assets/evaluation_index_re10k.json \
+model.decoder.name=splatting_cuda_anysplat \
+model.decoder.rasterize_mode=antialiased \
+model.decoder.eps2d=0.1 \
+checkpointing.pretrained_model=checkpoints/2025-09-09_train002_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch/checkpoints/epoch_36-step_600000.ckpt \
+test.save_image=false \
 test.save_video=false \
-output_dir=outputs/20250903_run001_re10k-256x256-simt-fullset_3DLPF-GSHeadft-Small \
-2>&1 | tee outputs/20250903_run001_re10k-256x256-simt-fullset_3DLPF-GSHeadft-Small.log
+test.compute_scores=true \
+test.save_image_upsampled=false \
+test.skip_upsampled_scores=false \
+output_dir=outputs/2025-09-14_test-009_acid-2x256x256-2v-zs-simt_depthsplat-Small-3DLPF-2DMip-Fullscratch \
+2>&1 | tee outputs/2025-09-14_test-009_acid-2x256x256-2v-zs-simt_depthsplat-Small-3DLPF-2DMip-Fullscratch.log

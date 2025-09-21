@@ -42,7 +42,8 @@ with install_import_hook(
     from src.model.encoder import get_encoder
     #from src.model.model_wrapper import ModelWrapper
     #from src.model.model_wrapper_simt import ModelWrapperSIMT
-    from src.model.model_wrapper_2 import ModelWrapper2
+    #from src.model.model_wrapper_2 import ModelWrapper2
+    from src.model.model_wrapper_3 import ModelWrapper3
 
 
 def cyan(text: str) -> str:
@@ -216,7 +217,20 @@ def train(cfg_dict: DictConfig):
     #        None if eval_cfg is None else eval_cfg.dataset
     #    ),
     #)
-    model_wrapper = ModelWrapper2(
+    #model_wrapper = ModelWrapper2(
+    #    cfg.optimizer,
+    #    cfg.test,
+    #    cfg.train,
+    #    encoder,
+    #    encoder_visualizer,
+    #    get_decoder(cfg.model.decoder, cfg.dataset),
+    #    get_losses(cfg.loss),
+    #    step_tracker,
+    #    eval_data_cfg=(
+    #        None if eval_cfg is None else eval_cfg.dataset
+    #    ),
+    #)
+    model_wrapper = ModelWrapper3(
         cfg.optimizer,
         cfg.test,
         cfg.train,

@@ -77,6 +77,9 @@ class TestCfg:
     render_chunk_size: int | None
     stablize_camera: bool
     stab_camera_kernel: int
+    # new additions
+    save_image_upsampled: bool
+    skip_upsampled_scores: bool
 
 
 @dataclass

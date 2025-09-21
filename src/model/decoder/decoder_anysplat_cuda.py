@@ -57,6 +57,7 @@ class DecoderSplattingCUDAAnySplat(Decoder[DecoderSplattingCUDAAnySplatCfg]):
             torch.tensor(dataset_cfg.background_color, dtype=torch.float32),
             persistent=False,
         )
+        print("Building DepthSplat w/ 2D Mip filter from mip-splatting")
 
     def rendering_fn(
         self,

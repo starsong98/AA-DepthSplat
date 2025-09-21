@@ -86,6 +86,13 @@ test:
   render_chunk_size: null
   stablize_camera: false
   stab_camera_kernel: 50
+  save_image_upsampled: true    # new addition - whether to save nvs rendered @ higher res. than context views. zoomed-in views. tests moire effects & erosion.
+  skip_upsampled_scores: false  # TODO new addition - whether to not compute scores for upsampled views. because GTs are unreliable, or causes OOM during LPIPS, etc...
+  #render_upsampled: true    # TODO new addition - whether to render @ higher res. than context views. zoomed-in views. tests moire effects & erosion.
+  #render_downsampled: true  # TODO new addition - whether to render @ lower res. than context views. zoomed-out views. tests aliasing.
+  #render_native: true       # TODO new addition - whether to render @ context view resolutions. regular sampling interval.
+  #save_grid_images_upsampled: true      # TODO new addition - whether to render grid images for upsampled views.
+  #save_grid_images_downsampled: true    # TODO new addition - whether to render grid images for downsampled views.
 
 seed: 111123
 
