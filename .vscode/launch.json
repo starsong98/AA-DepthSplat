@@ -261,5 +261,45 @@
       "logToFile": true,
       "redirectOutput": true
     },
+    {
+      "name": "Advanced inference - Target view depth rendering",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main_3",
+      "env": {
+        //"CUDA_VISIBLE_DEVICES": "2"
+        //"CUDA_VISIBLE_DEVICES": "0"
+        "CUDA_VISIBLE_DEVICES": "3"
+      },
+      "args": [
+        "+experiment=dl3dv",
+        "mode=test",
+        "dataset.roots=[datasets_extra/dl3dv_480p]",
+        "dataset/view_sampler=evaluation",
+        "dataset.test_chunk_interval=100",
+        "dataset.view_sampler.num_context_views=2",
+        "dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_10_ctx_2v_tgt_4v.json",
+        "model.encoder.name=depthsplat_lpf",
+        "model.encoder.upsample_factor=4",
+        "model.encoder.lowest_feature_resolution=4",
+        "model.encoder.gaussian_adapter.compensate_opacities=false",
+        "model.decoder.name=splatting_cuda_anysplat",
+        "model.decoder.rasterize_mode=antialiased",
+        "model.decoder.eps2d=0.1",
+        "checkpointing.pretrained_model=checkpoints/2025-09-09_train002_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch/checkpoints/epoch_36-step_600000.ckpt",
+        "test.save_video=false",
+        "test.compute_scores=true",
+        "test.save_image_upsampled=false",
+        "test.skip_upsampled_scores=true",
+        "test.save_depth=true",
+        "test.save_depth_concat_img=true",
+        "test.save_grid_comparisons=true",
+        "test.depth_mode=depth",
+        "output_dir=outputs/2025-09-23_debug-test-002_dl3dv-zs-simt_grid_vis_renderdepth_1x"
+      ],
+      "console": "integratedTerminal",
+      "logToFile": true,
+      "redirectOutput": true
+    },
   ]
 }

@@ -18,6 +18,7 @@ import time
 from tqdm import tqdm
 import torch.nn.functional as F
 import math
+from typing import Generic, Literal, TypeVar
 
 from ..dataset.data_module import get_data_shim
 from ..dataset.types import BatchedExample
@@ -80,6 +81,17 @@ class TestCfg:
     # new additions
     save_image_upsampled: bool
     skip_upsampled_scores: bool
+    save_grid_comparisons: bool
+    depth_mode: DepthRenderingMode
+    #save_grid_comparisons_depths: bool
+    save_grid_comparisons_downsampled: bool
+    #pseudogt_downsample_mode: str
+
+
+PseudoGTDownsampleMode = Literal[
+    "lanczos",
+    "gaussian-bilinear",
+]
 
 
 @dataclass

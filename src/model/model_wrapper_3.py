@@ -119,7 +119,8 @@ class ModelWrapper3(ModelWrapper):
                             render_near[:, start:end],
                             render_far[:, start:end],
                             (h, w),
-                            depth_mode=None,
+                            #depth_mode=None,
+                            depth_mode=self.test_cfg.depth_mode,
                         )
 
                         # 1/2 scale outputs
@@ -130,7 +131,8 @@ class ModelWrapper3(ModelWrapper):
                             render_near[:, start:end],
                             render_far[:, start:end],
                             (h//2, w//2),
-                            depth_mode=None,
+                            #depth_mode=None,
+                            depth_mode=self.test_cfg.depth_mode,
                         )
 
                         # 1/4 scale outputs
@@ -141,7 +143,8 @@ class ModelWrapper3(ModelWrapper):
                             render_near[:, start:end],
                             render_far[:, start:end],
                             (h//4, w//4),
-                            depth_mode=None,
+                            #depth_mode=None,
+                            depth_mode=self.test_cfg.depth_mode,
                         )
 
                         # 2x scale outputs
@@ -152,7 +155,8 @@ class ModelWrapper3(ModelWrapper):
                             render_near[:, start:end],
                             render_far[:, start:end],
                             (h*2, w*2),
-                            depth_mode=None,
+                            #depth_mode=None,
+                            depth_mode=self.test_cfg.depth_mode,
                         )
 
                         # 4x scale outputs
@@ -163,7 +167,8 @@ class ModelWrapper3(ModelWrapper):
                             render_near[:, start:end],
                             render_far[:, start:end],
                             (h*4, w*4),
-                            depth_mode=None,
+                            #depth_mode=None,
+                            depth_mode=self.test_cfg.depth_mode,
                         )
 
                         if i == 0:
@@ -200,7 +205,8 @@ class ModelWrapper3(ModelWrapper):
                         batch["target"]["near"],
                         batch["target"]["far"],
                         (h, w),
-                        depth_mode=None,
+                        #depth_mode=None,
+                        depth_mode=self.test_cfg.depth_mode,
                     )
                     # 1/2 scale outputs
                     output_1_2 = self.decoder.forward(
@@ -210,7 +216,8 @@ class ModelWrapper3(ModelWrapper):
                         batch["target"]["near"],
                         batch["target"]["far"],
                         (h//2, w//2),
-                        depth_mode=None,
+                        #depth_mode=None,
+                        depth_mode=self.test_cfg.depth_mode,
                     )
                     # 1/4 scale outputs
                     output_1_4 = self.decoder.forward(
@@ -220,7 +227,8 @@ class ModelWrapper3(ModelWrapper):
                         batch["target"]["near"],
                         batch["target"]["far"],
                         (h//4, w//4),
-                        depth_mode=None,
+                        #depth_mode=None,
+                        depth_mode=self.test_cfg.depth_mode,
                     )
                     # 2x scale outputs
                     output_2 = self.decoder.forward(
@@ -230,7 +238,8 @@ class ModelWrapper3(ModelWrapper):
                         batch["target"]["near"],
                         batch["target"]["far"],
                         (h*2, w*2),
-                        depth_mode=None,
+                        #depth_mode=None,
+                        depth_mode=self.test_cfg.depth_mode,
                     )
                     # 4x scale outputs
                     output_4 = self.decoder.forward(
@@ -240,7 +249,8 @@ class ModelWrapper3(ModelWrapper):
                         batch["target"]["near"],
                         batch["target"]["far"],
                         (h*4, w*4),
-                        depth_mode=None,
+                        #depth_mode=None,
+                        depth_mode=self.test_cfg.depth_mode,
                     )
 
         (scene,) = batch["scene"]
@@ -299,17 +309,38 @@ class ModelWrapper3(ModelWrapper):
             if self.train_cfg.forward_depth_only:
                 return
 
+        # output rendered images
         images_prob = output.color[0]
-        rgb_gt = batch["target"]["image"][0]    # [V, 3, H, W]
+        #rgb_gt = batch["target"]["image"][0]    # [V, 3, H, W]
         images_1_2_prob = output_1_2.color[0]   # 1/2 scale images
         images_1_4_prob = output_1_4.color[0]   # 1/4 scale images
         images_2_prob = output_2.color[0]   # 2x scale images
         images_4_prob = output_4.color[0]   # 4x scale images
+
+        # multiscale gts/pseudo-GTs
         # referring to `src/dataset/shims/crop_shim.py`>L93 to prepare multi-scale 'GT's.
+        # TODO might have to doubt this too later
+        rgb_gt = batch["target"]["image"][0]    # [V, 3, H, W]
         rgb_gt_1_2 = torch.stack([rescale(rgb_gt_one, (h//2, w//2)) for rgb_gt_one in rgb_gt])  # 1/2 scale GTs
         rgb_gt_1_4 = torch.stack([rescale(rgb_gt_one, (h//4, w//4)) for rgb_gt_one in rgb_gt])  # 1/4 scale GTs
         rgb_gt_2 = torch.stack([rescale(rgb_gt_one, (h*2, w*2)) for rgb_gt_one in rgb_gt])      # 2x scale GTs
         rgb_gt_4 = torch.stack([rescale(rgb_gt_one, (h*4, w*4)) for rgb_gt_one in rgb_gt])      # 4x scale GTs
+        
+        # Color-map the result. Taken from the render_video_generic() function.
+        def depth_map(result):
+            near = result[result > 0][:16_000_000].quantile(0.01).log()
+            far = result.view(-1)[:16_000_000].quantile(0.99).log()
+            result = result.log()
+            result = 1 - (result - near) / (far - near)
+            return apply_color_map_to_image(result, "turbo")
+
+        # TODO depth rendered images
+        if self.test_cfg.depth_mode is not None:
+            depths_prob = output.depth[0]   # 1x scale predicted depths
+            depths_1_2_prob = output_1_2.depth[0]   # 1/2 scale predicted depths
+            depths_1_4_prob = output_1_4.depth[0]   # 1/4 scale predicted depths
+            depths_2_prob = output_2.depth[0]   # 2x scale predicted depths
+            depths_4_prob = output_4.depth[0]   # 4x scale predicted depths
 
         # Save images.
         if self.test_cfg.save_image:
@@ -353,6 +384,54 @@ class ModelWrapper3(ModelWrapper):
                         save_image(color_4, path / "images" / scene / f"color_4/{index:0>6}.png")
                     save_image(color_1_2, path / "images" / scene / f"color_1_2/{index:0>6}.png")
                     save_image(color_1_4, path / "images" / scene / f"color_1_4/{index:0>6}.png")
+            
+            if self.test_cfg.save_grid_comparisons:
+                # reference: take a page out of validation loop
+                comparison = hcat(
+                    add_label(vcat(*batch["context"]["image"][0]), "Context"),
+                    add_label(vcat(*rgb_gt), "1x Target (Ground Truth)"),
+                    add_label(vcat(*images_prob), "1x Target (Prediction)"),
+                )
+                save_image(comparison, path / "images" / scene / f"grid/grid_vis.png")
+
+                if self.test_cfg.save_grid_comparisons_downsampled:
+                    comparison_1_2x = hcat(
+                        add_label(vcat(*rgb_gt_1_2), "1/2x Target (Pseudo-GT)"),
+                        add_label(vcat(*images_1_2_prob), "1/2x Target (Rendered)"),
+                    )
+                    save_image(comparison_1_2x, path / "images" / scene / f"grid/grid_vis_1_2x.png")
+
+                    comparison_1_4x = hcat(
+                        add_label(vcat(*rgb_gt_1_4), "1/4x PseudoGT", font_size=12),
+                        add_label(vcat(*images_1_4_prob), "1/4x Render", font_size=12),
+                    )
+                    save_image(comparison_1_4x, path / "images" / scene / f"grid/grid_vis_1_4x.png")
+
+
+                if self.test_cfg.depth_mode is not None:
+                    comparison_depth = hcat(
+                        add_label(vcat(*batch["context"]["image"][0]), "Context"),
+                        add_label(vcat(*depth_map(depth)), "Context GS Mean Depth"),
+                        add_label(vcat(*rgb_gt), "1x Target (Ground Truth)"),
+                        add_label(vcat(*images_prob), "1x Target (Prediction)"),
+                        add_label(vcat(*depth_map(depths_prob)), "1x Target GS Rendered Depth"),
+                    )
+                    save_image(comparison_depth, path / "images" / scene / f"grid/grid_vis_depth.png")
+
+                    if self.test_cfg.save_grid_comparisons_downsampled:
+                        comparison_depth_1_2x = hcat(
+                            add_label(vcat(*rgb_gt_1_2), "1/2x Target (Pseudo-GT)"),
+                            add_label(vcat(*images_1_2_prob), "1/2x Target (Rendered)"),
+                            add_label(vcat(*depth_map(depths_1_2_prob)), "1/2x Rendered Depth"),
+                        )
+                        save_image(comparison_depth_1_2x, path / "images" / scene / f"grid/grid_vis_depth_1_2x.png")
+
+                        comparison_depth_1_4x = hcat(
+                            add_label(vcat(*rgb_gt_1_4), "1/4x PseudoGT", font_size=12),
+                            add_label(vcat(*images_1_4_prob), "1/4x Render", font_size=12),
+                            add_label(vcat(*depth_map(depths_1_4_prob)), "1/4x Depth", font_size=12),
+                        )
+                        save_image(comparison_depth_1_4x, path / "images" / scene / f"grid/grid_vis_depth_1_4x.png")
 
         # save video
         if self.test_cfg.save_video:

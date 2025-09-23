@@ -708,10 +708,10 @@ export HYDRA_FULL_ERROR=1
 # TODO: confidence scores?
 
 ##########################################################################################
-# Model Zoo checkpoints, detailed visuals & metrics
+# My improved baseline model, detailed visuals & metrics
 ##########################################################################################
 
-# Small Model, RE10K 2x256x256 vs RE10K 2x256x256
+# Small Model
 python -m src.main_3 +experiment=re10k \
 mode=test \
 dataset.roots=[datasets/re10k] \
@@ -719,9 +719,14 @@ dataset/view_sampler=evaluation \
 dataset.test_chunk_interval=1 \
 dataset.view_sampler.num_context_views=2 \
 dataset/view_sampler=evaluation \
+model.encoder.name=depthsplat_lpf \
 model.encoder.upsample_factor=4 \
 model.encoder.lowest_feature_resolution=4 \
-checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
+model.encoder.gaussian_adapter.compensate_opacities=false \
+model.decoder.name=splatting_cuda_anysplat \
+model.decoder.rasterize_mode=antialiased \
+model.decoder.eps2d=0.1 \
+checkpointing.pretrained_model=checkpoints/2025-09-09_train002_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch/checkpoints/epoch_36-step_600000.ckpt \
 test.save_video=false \
 test.compute_scores=true \
 test.save_image_upsampled=false \
@@ -732,5 +737,5 @@ test.save_grid_comparisons=true \
 test.depth_mode=depth \
 test.save_grid_comparisons_downsampled=true \
 test.save_gaussian=true \
-output_dir=outputs/2025-09-23_test-003_re10k-2x256x256-simt_depthsplat-modelzoo-Small_detailed-results \
-2>&1 | tee outputs/2025-09-23_test-003_re10k-2x256x256-simt_depthsplat-modelzoo-Small_detailed-results.log
+output_dir=outputs/2025-09-23_test-002_re10k-2x256x256-simt_depthsplat-Small-3DLPF-2DMip_detailed-results \
+2>&1 | tee outputs/2025-09-23_test-002_re10k-2x256x256-simt_depthsplat-Small-3DLPF-2DMip_detailed-results.log
