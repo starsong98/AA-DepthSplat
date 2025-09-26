@@ -90,7 +90,8 @@ class TestCfg:
 
 PseudoGTDownsampleMode = Literal[
     "lanczos",
-    "gaussian-bilinear",
+    "gaussian_bilinear",
+    "mipnerf360_esque",
 ]
 
 
