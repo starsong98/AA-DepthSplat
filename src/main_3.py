@@ -104,7 +104,8 @@ def train(cfg_dict: DictConfig):
             eval_path = "assets/evaluation_index_re10k.json"
         elif "dl3dv" in dataset_dir:
             if cfg_dict["dataset"]["view_sampler"]["num_context_views"] == 6:
-                eval_path = "assets/dl3dv_start_0_distance_50_ctx_6v_tgt_8v.json"
+                #eval_path = "assets/dl3dv_start_0_distance_50_ctx_6v_tgt_8v.json"
+                eval_path = "assets/dl3dv_start_0_distance_50_ctx_6v_video_0_50.json"
             else:
                 raise ValueError("unsupported number of views for dl3dv")
         else:
