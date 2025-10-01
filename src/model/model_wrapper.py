@@ -85,6 +85,7 @@ class TestCfg:
     depth_mode: DepthRenderingMode
     #save_grid_comparisons_depths: bool
     save_grid_comparisons_downsampled: bool
+    save_grid_comparisons_upsampled: bool
     #pseudogt_downsample_mode: str
 
 

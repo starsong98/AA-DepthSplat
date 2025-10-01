@@ -90,11 +90,11 @@ test:
   skip_upsampled_scores: false  # new addition - whether to not compute scores for upsampled views. because GTs are unreliable, or causes OOM during LPIPS, etc...
   save_grid_comparisons: false  # new addition - whether to render grid images for native res. views.
   depth_mode: null  # new addition - whether to render grid images for native res. views.
-  save_grid_comparisons_downsampled: false    # TODO new addition - whether to render grid images for downsampled views. Independent?
+  save_grid_comparisons_downsampled: false    # new addition - whether to render grid images for downsampled views. Independent?
+  save_grid_comparisons_upsampled: false    # new addition - whether to render grid images for upsampled views. Independent?
   #render_upsampled: true    # TODO new addition - whether to render @ higher res. than context views. zoomed-in views. tests moire effects & erosion.
   #render_downsampled: true  # TODO new addition - whether to render @ lower res. than context views. zoomed-out views. tests aliasing.
   #render_native: true       # TODO new addition - whether to render @ context view resolutions. regular sampling interval.
-  #save_grid_images_upsampled: true      # TODO new addition - whether to render grid images for upsampled views.
 
 seed: 111123
 

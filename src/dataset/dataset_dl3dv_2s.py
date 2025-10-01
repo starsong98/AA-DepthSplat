@@ -29,6 +29,7 @@ class DatasetDL3DVMSCfg(DatasetCfgCommon):
     roots_480p: list[Path]  # 270x480 split; "images_8"
     roots_960p: list[Path]  # 540x960 split; "images_4"
     roots_2k: list[Path] | None # 1080x1920 split; "images_2"
+    roots_4k: list[Path] | None # 2160x3840 split; "images_1" or "images"?
     baseline_epsilon: float
     max_fov: float
     make_baseline_1: bool
@@ -54,7 +55,7 @@ class DatasetDL3DVMSCfg(DatasetCfgCommon):
     use_index_to_load_chunk: Optional[bool] = False
 
 
-class DatasetDL3DVMS(IterableDataset):
+class DatasetDL3DV2S(IterableDataset):
     cfg: DatasetDL3DVMSCfg
     stage: Stage
     view_sampler: ViewSampler
@@ -83,9 +84,32 @@ class DatasetDL3DVMS(IterableDataset):
             self.far = cfg.far
 
         # Collect chunks.
-        self.chunks = []
         # TODO this part needs to change to accomodate multiple resolutions
-        for i, root in enumerate(cfg.roots):
+        # original: single resolution
+        #self.chunks = []
+        #for i, root in enumerate(cfg.roots):
+        #    root = root / self.data_stage
+        #    if self.cfg.use_index_to_load_chunk:
+        #        with open(root / "index.json", "r") as f:
+        #            json_dict = json.load(f)
+        #        root_chunks = sorted(list(set(json_dict.values())))
+        #    else:
+        #        root_chunks = sorted(
+        #            [path for path in root.iterdir() if path.suffix == ".torch"]
+        #        )
+        #    self.chunks.extend(root_chunks)
+        #if self.cfg.overfit_to_scene is not None:
+        #    chunk_path = self.index[self.cfg.overfit_to_scene]
+        #    self.chunks = [chunk_path] * len(self.chunks)
+        #if self.stage == "test":
+        #    # fast testing
+        #    self.chunks = self.chunks[:: cfg.test_chunk_interval]
+        #if self.stage == "val":
+        #    self.chunks = self.chunks * int(1e6 // len(self.chunks))
+        
+        # 480p resolution
+        self.chunks_480p = []
+        for i, root in enumerate(cfg.roots_480p):
             root = root / self.data_stage
             if self.cfg.use_index_to_load_chunk:
                 with open(root / "index.json", "r") as f:
@@ -95,16 +119,39 @@ class DatasetDL3DVMS(IterableDataset):
                 root_chunks = sorted(
                     [path for path in root.iterdir() if path.suffix == ".torch"]
                 )
-
-            self.chunks.extend(root_chunks)
+            self.chunks_480p.extend(root_chunks)
+        
+        # 960p resolution
+        self.chunks_960p = []
+        for i, root in enumerate(cfg.roots_960p):
+            root = root / self.data_stage
+            if self.cfg.use_index_to_load_chunk:
+                with open(root / "index.json", "r") as f:
+                    json_dict = json.load(f)
+                root_chunks = sorted(list(set(json_dict.values())))
+            else:
+                root_chunks = sorted(
+                    [path for path in root.iterdir() if path.suffix == ".torch"]
+                )
+            self.chunks_960p.extend(root_chunks)
+        
         if self.cfg.overfit_to_scene is not None:
-            chunk_path = self.index[self.cfg.overfit_to_scene]
-            self.chunks = [chunk_path] * len(self.chunks)
+            #chunk_path = self.index[self.cfg.overfit_to_scene]
+            #self.chunks = [chunk_path] * len(self.chunks)
+            chunk_path_480p = self.index["480p"][self.cfg.overfit_to_scene]
+            self.chunks_480p = [chunk_path_480p] * len(self.chunks_480p)
+            chunk_path_960p = self.index["960p"][self.cfg.overfit_to_scene]
+            self.chunks_960p = [chunk_path_960p] * len(self.chunks_960p)
         if self.stage == "test":
             # fast testing
-            self.chunks = self.chunks[:: cfg.test_chunk_interval]
+            #self.chunks = self.chunks[:: cfg.test_chunk_interval]
+            self.chunks_480p = self.chunks_480p[:: cfg.test_chunk_interval]
+            self.chunks_960p = self.chunks_960p[:: cfg.test_chunk_interval]
         if self.stage == "val":
-            self.chunks = self.chunks * int(1e6 // len(self.chunks))
+            #self.chunks = self.chunks * int(1e6 // len(self.chunks))
+            self.chunks_480p = self.chunks_480p * int(1e6 // len(self.chunks_480p))
+            self.chunks_960p = self.chunks_960p * int(1e6 // len(self.chunks_960p))
+
 
     def shuffle(self, lst: list) -> list:
         indices = torch.randperm(len(lst))
@@ -147,7 +194,7 @@ class DatasetDL3DVMS(IterableDataset):
                 else self.cfg.train_times_per_scene
             )
 
-            for run_idx in range(int(times_per_scene * len(chunk))):
+            for run_idx in range(int(times_.per_scene * len(chunk))):
                 example = chunk[run_idx // times_per_scene]
 
                 extrinsics, intrinsics = self.convert_poses(example["cameras"])
@@ -365,14 +412,42 @@ class DatasetDL3DVMS(IterableDataset):
             return "test"
         return self.stage
 
+    # reference: single resolution version
+    #@cached_property
+    #def index(self) -> dict[str, Path]:
+    #    merged_index = {}
+    #    data_stages = [self.data_stage]
+    #    if self.cfg.overfit_to_scene is not None:
+    #        data_stages = ("test", "train")
+    #    for data_stage in data_stages:
+    #        for i, root in enumerate(self.cfg.roots):
+    #            if not (root / data_stage).is_dir():
+    #                continue
+    #
+    #            # Load the root's index.
+    #            with (root / data_stage / "index.json").open("r") as f:
+    #                index = json.load(f)
+    #            index = {k: Path(root / data_stage / v)
+    #                     for k, v in index.items()}
+    #
+    #            # The constituent datasets should have unique keys.
+    #            assert not (set(merged_index.keys()) & set(index.keys()))
+    #
+    #            # Merge the root's index into the main index.
+    #            merged_index = {**merged_index, **index}
+    #    return merged_index
+    
     @cached_property
-    def index(self) -> dict[str, Path]:
+    def index(self) -> dict[str, dict[str, Path]]:  # does this kind of definition even work?
         merged_index = {}
         data_stages = [self.data_stage]
         if self.cfg.overfit_to_scene is not None:
             data_stages = ("test", "train")
+            #data_stages = ("test")  # uncomment this for implementing only the test set if some hiccup occurs
         for data_stage in data_stages:
-            for i, root in enumerate(self.cfg.roots):
+            # 480p portion
+            merged_index_480p = {}
+            for i, root in enumerate(self.cfg.roots_480p):
                 if not (root / data_stage).is_dir():
                     continue
 
@@ -383,10 +458,33 @@ class DatasetDL3DVMS(IterableDataset):
                          for k, v in index.items()}
 
                 # The constituent datasets should have unique keys.
-                assert not (set(merged_index.keys()) & set(index.keys()))
+                assert not (set(merged_index_480p.keys()) & set(index.keys()))
 
                 # Merge the root's index into the main index.
-                merged_index = {**merged_index, **index}
+                merged_index_480p = {**merged_index_480p, **index}
+            
+            # 960p portion
+            merged_index_960p = {}
+            for i, root in enumerate(self.cfg.roots_960p):
+                if not (root / data_stage).is_dir():
+                    continue
+
+                # Load the root's index.
+                with (root / data_stage / "index.json").open("r") as f:
+                    index = json.load(f)
+                index = {k: Path(root / data_stage / v)
+                         for k, v in index.items()}
+
+                # The constituent datasets should have unique keys.
+                assert not (set(merged_index_960p.keys()) & set(index.keys()))
+
+                # Merge the root's index into the main index.
+                merged_index_960p = {**merged_index_960p, **index}
+        
+        merged_index = {
+            "480p": merged_index_480p,
+            "960p": merged_index_960p,
+        }
         return merged_index
 
     def __len__(self) -> int:

@@ -1,14 +1,14 @@
 # @package _global_
 
 defaults:
-  - override /dataset: dl3dv_ms # modified
+  - override /dataset: dl3dv_2s # modified
   - override /model/encoder: depthsplat
   - override /loss: [mse, lpips]
   - override /dataset/view_sampler: boundedv2_360
 
 wandb:
-  name: dl3dv
-  tags: [dl3dv, 270x480]
+  name: dl3dv_2s
+  tags: [dl3dv, 270x480, 540x960]
 
 data_loader:
   train:
