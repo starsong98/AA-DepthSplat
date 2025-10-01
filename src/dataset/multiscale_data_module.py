@@ -34,6 +34,24 @@ def get_data_shim(encoder: nn.Module) -> DataShim:
     return combined_shim
 
 
+def get_data_shim_scaled(encoder: nn.Module, scaling_factor: int = 2) -> DataShim:
+    """Get functions that modify the batch. It's sometimes necessary to modify batches
+    outside the data loader because GPU computations are required to modify the batch or
+    because the modification depends on something outside the data loader.
+    """
+
+    shims: list[DataShim] = []
+    if hasattr(encoder, "get_data_shim_scaled"):
+        #shims.append(encoder.get_data_shim())
+        shims.append(encoder.get_data_shim_scaled(scaling_factor=scaling_factor))
+
+    def combined_shim(batch):
+        for shim in shims:
+            batch = shim(batch)
+        return batch
+
+    return combined_shim
+
 #@dataclass
 #class DataLoaderStageCfg:
 #    batch_size: int

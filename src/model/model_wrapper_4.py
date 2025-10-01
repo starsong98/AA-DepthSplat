@@ -1,6 +1,7 @@
 from .model_wrapper import *
 
 from ..dataset.shims.crop_shim import rescale
+from ..dataset.multiscale_data_module import get_data_shim_scaled
 
 import pandas as pd
 
@@ -28,6 +29,7 @@ class ModelWrapper4(ModelWrapper):
             step_tracker,
             eval_data_cfg
         )
+        self.data_shim_2 = get_data_shim_scaled(self.encoder, scaling_factor=2)  # for handling the 960p split
     
     def test_step(self, batch, batch_idx, dataloader_idx=0):
         batch, batch_960p = batch["480p"], batch["960p"]
@@ -35,9 +37,25 @@ class ModelWrapper4(ModelWrapper):
         batch: BatchedExample = self.data_shim(batch)
         b, v, _, h, w = batch["target"]["image"].shape
         assert b == 1
-        batch_960p: BatchedExample = self.data_shim(batch_960p)
+        #batch_960p: BatchedExample = self.data_shim(batch_960p)
+        batch_960p: BatchedExample = self.data_shim_2(batch_960p)
 
         pred_depths = None
+
+        # debugging camera pose misalignment between resolution splits
+        # TODO I should totally make this a separate setting someday
+        #camera_poses = batch["target"]["extrinsics"]
+        #camera_poses_960p = batch_960p["target"]["extrinsics"]
+        #intrinsics_debug= batch["target"]["intrinsics"]
+        #intrinsics_debug_960p = batch_960p["target"]["intrinsics"]
+        #
+        #scene = batch["scene"][0]
+        #if not torch.equal(camera_poses, camera_poses_960p):
+        #    print(f"Scene {scene}: Target view extrinsics misaligned")
+        #if not torch.equal(intrinsics_debug, intrinsics_debug_960p):
+        #    print(f"Scene {scene}: Target view intrinsics misaligned")
+        #return
+
 
         # save input views for visualization
         if self.test_cfg.save_input_images:
@@ -81,11 +99,15 @@ class ModelWrapper4(ModelWrapper):
             with self.benchmarker.time("decoder", num_calls=v):
 
                 camera_poses = batch["target"]["extrinsics"]
-                camera_poses_960p = batch_960p["target"]["extrinsics"]
-
-                # debugging camera pose misalignment between resolution splits
+                #camera_poses_960p = batch_960p["target"]["extrinsics"]
+                #intrinsics_debug= batch["target"]["intrinsics"]
+                #intrinsics_debug_960p = batch_960p["target"]["intrinsics"]
+                #
+                ## debugging camera pose misalignment between resolution splits
                 #if not torch.equal(camera_poses, camera_poses_960p):
                 #    print(f"Scene {scene}: Target view extrinsics misaligned")
+                #if not torch.equal(intrinsics_debug, intrinsics_debug_960p):
+                #    print(f"Scene {scene}: Target view intrinsics misaligned")
                 #return
 
                 if self.test_cfg.stablize_camera:

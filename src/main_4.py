@@ -269,7 +269,8 @@ def train(cfg_dict: DictConfig):
     #dataset_cfg_960p.image_shape = [512, 896]
     dataset_cfg_960p.image_shape = [540, 960]
     dataset_cfg_960p.ori_image_shape = [540, 960]
-    dataset_cfg_960p.roots = [Path("datasets_extra/dl3dv_960p")] # this really isn't ideal but something more sophisticated will take way too long
+    #dataset_cfg_960p.roots = [Path("datasets_extra/dl3dv_960p")] # this really isn't ideal but something more sophisticated will take way too long
+    dataset_cfg_960p.roots = [Path("datasets/dl3dv_960p")] # this really isn't ideal but something more sophisticated will take way too long
 
     data_module = MultiScaleDataModule(
         cfg.dataset,

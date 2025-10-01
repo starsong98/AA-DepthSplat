@@ -388,6 +388,21 @@ class EncoderDepthSplat(Encoder[EncoderDepthSplatCfg]):
             return batch
 
         return data_shim
+    
+    # really dont like modifying the original files like this but this will be cleaner down the road
+    # plus I need to apply this to the baseline model too
+    def get_data_shim_scaled(self, scaling_factor: int = 2) -> DataShim:
+        def data_shim(batch: BatchedExample) -> BatchedExample:
+            batch = apply_patch_shim(
+                batch,
+                patch_size=self.cfg.shim_patch_size
+                * self.cfg.downscale_factor
+                * scaling_factor,
+            )
+
+            return batch
+
+        return data_shim
 
     @property
     def sampler(self):
