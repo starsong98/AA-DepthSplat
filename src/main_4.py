@@ -32,6 +32,7 @@ with install_import_hook(
 ):
     from src.config import load_typed_root_config
     from src.dataset.data_module import DataModule
+    from src.dataset.multiscale_data_module import MultiScaleDataModule
     from src.global_cfg import set_cfg
     from src.loss import get_losses
     from src.misc.LocalLogger import LocalLogger
@@ -43,7 +44,8 @@ with install_import_hook(
     #from src.model.model_wrapper import ModelWrapper
     #from src.model.model_wrapper_simt import ModelWrapperSIMT
     #from src.model.model_wrapper_2 import ModelWrapper2
-    from src.model.model_wrapper_3 import ModelWrapper3
+    #from src.model.model_wrapper_3 import ModelWrapper3
+    from src.model.model_wrapper_4 import ModelWrapper4
 
 
 def cyan(text: str) -> str:
@@ -105,8 +107,7 @@ def train(cfg_dict: DictConfig):
             eval_path = "assets/evaluation_index_re10k.json"
         elif "dl3dv" in dataset_dir:
             if cfg_dict["dataset"]["view_sampler"]["num_context_views"] == 6:
-                #eval_path = "assets/dl3dv_start_0_distance_50_ctx_6v_tgt_8v.json"
-                eval_path = "assets/dl3dv_start_0_distance_50_ctx_6v_video_0_50.json"
+                eval_path = "assets/dl3dv_start_0_distance_50_ctx_6v_tgt_8v.json"
             else:
                 raise ValueError("unsupported number of views for dl3dv")
         else:
@@ -231,7 +232,20 @@ def train(cfg_dict: DictConfig):
     #        None if eval_cfg is None else eval_cfg.dataset
     #    ),
     #)
-    model_wrapper = ModelWrapper3(
+    #model_wrapper = ModelWrapper3(
+    #    cfg.optimizer,
+    #    cfg.test,
+    #    cfg.train,
+    #    encoder,
+    #    encoder_visualizer,
+    #    get_decoder(cfg.model.decoder, cfg.dataset),
+    #    get_losses(cfg.loss),
+    #    step_tracker,
+    #    eval_data_cfg=(
+    #        None if eval_cfg is None else eval_cfg.dataset
+    #    ),
+    #)
+    model_wrapper = ModelWrapper4(
         cfg.optimizer,
         cfg.test,
         cfg.train,
@@ -244,8 +258,22 @@ def train(cfg_dict: DictConfig):
             None if eval_cfg is None else eval_cfg.dataset
         ),
     )
-    data_module = DataModule(
+    #data_module = DataModule(
+    #    cfg.dataset,
+    #    cfg.data_loader,
+    #    step_tracker,
+    #    global_rank=trainer.global_rank,
+    #)
+    # 960p split configs - this really isn't ideal but something more sophisticated will take way too long
+    dataset_cfg_960p = copy.deepcopy(cfg.dataset)
+    #dataset_cfg_960p.image_shape = [512, 896]
+    dataset_cfg_960p.image_shape = [540, 960]
+    dataset_cfg_960p.ori_image_shape = [540, 960]
+    dataset_cfg_960p.roots = [Path("datasets_extra/dl3dv_960p")] # this really isn't ideal but something more sophisticated will take way too long
+
+    data_module = MultiScaleDataModule(
         cfg.dataset,
+        dataset_cfg_960p,
         cfg.data_loader,
         step_tracker,
         global_rank=trainer.global_rank,

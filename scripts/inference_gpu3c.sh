@@ -786,76 +786,196 @@ export HYDRA_FULL_ERROR=1
 #2>&1 | tee outputs/2025-09-24_test-003_dl3dv-zs-2x256x448-simt_depthsplat-modelzoo-Small_detailed-results.log
 
 # Base Model, RE10K 2x256x256 -> DL3DV {2,3,4,5,6}x256x448 vs DL3DV 2x256x448
-python -m src.main_3 +experiment=dl3dv \
+#python -m src.main_3 +experiment=dl3dv \
+#mode=test \
+#dataset.roots=[datasets_extra/dl3dv_480p] \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.num_context_views=2 \
+#dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_50_ctx_2v_video_0_50.json \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=8 \
+#model.encoder.monodepth_vit_type=vitb \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-randview2-6-02c7b19d.pth \
+#test.save_video=false \
+#test.compute_scores=true \
+#test.save_image_upsampled=false \
+#test.skip_upsampled_scores=true \
+#test.save_depth=true \
+#test.save_depth_concat_img=true \
+#test.save_grid_comparisons=true \
+#test.depth_mode=depth \
+#test.save_grid_comparisons_downsampled=true \
+#test.save_gaussian=true \
+#output_dir=outputs/2025-09-24_test-005_dl3dv-id-2x256x448-simt_depthsplat-modelzoo-Base_detailed-results \
+#2>&1 | tee outputs/2025-09-24_test-005_dl3dv-id-2x256x448-simt_depthsplat-modelzoo-Base_detailed-results.log
+
+## Base Model, RE10K 2x256x256 -> DL3DV {2,3,4,5,6}x256x448 vs DL3DV 4x256x448
+#python -m src.main_3 +experiment=dl3dv \
+#mode=test \
+#dataset.roots=[datasets_extra/dl3dv_480p] \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.num_context_views=4 \
+#dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_50_ctx_4v_video_0_50.json \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=8 \
+#model.encoder.monodepth_vit_type=vitb \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-randview2-6-02c7b19d.pth \
+#test.save_video=false \
+#test.compute_scores=true \
+#test.save_image_upsampled=false \
+#test.skip_upsampled_scores=true \
+#test.save_depth=true \
+#test.save_depth_concat_img=true \
+#test.save_grid_comparisons=true \
+#test.depth_mode=depth \
+#test.save_grid_comparisons_downsampled=true \
+#test.save_gaussian=true \
+#output_dir=outputs/2025-09-24_test-006_dl3dv-id-4x256x448-simt_depthsplat-modelzoo-Base_detailed-results \
+#2>&1 | tee outputs/2025-09-24_test-006_dl3dv-id-4x256x448-simt_depthsplat-modelzoo-Base_detailed-results.log
+
+## Base Model, RE10K 2x256x256 -> DL3DV {2,3,4,5,6}x256x448 vs DL3DV 4x256x448
+#python -m src.main_3 +experiment=dl3dv \
+#mode=test \
+#dataset.roots=[datasets_extra/dl3dv_480p] \
+#dataset/view_sampler=evaluation \
+#dataset.view_sampler.num_context_views=6 \
+#dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_50_ctx_6v_video_0_50.json \
+#model.encoder.num_scales=2 \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=8 \
+#model.encoder.monodepth_vit_type=vitb \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-randview2-6-02c7b19d.pth \
+#test.save_video=false \
+#test.compute_scores=true \
+#test.save_image_upsampled=false \
+#test.skip_upsampled_scores=true \
+#test.save_depth=true \
+#test.save_depth_concat_img=true \
+#test.save_grid_comparisons=true \
+#test.depth_mode=depth \
+#test.save_grid_comparisons_downsampled=true \
+#test.save_gaussian=true \
+#output_dir=outputs/2025-09-25_test-001_dl3dv-id-6x256x448-simt_depthsplat-modelzoo-Base_detailed-results \
+#2>&1 | tee outputs/2025-09-25_test-001_dl3dv-id-6x256x448-simt_depthsplat-modelzoo-Base_detailed-results.log
+
+################################################################################
+# RE10k 2x256x256 --> DL3DV 2x256x448 & 2x512x896 zeroshot full test set
+################################################################################
+
+# RE10k 256x256 --> DL3DV 256x448 zero-shot full test set
+# Full mip-splatting + depthsplat (Small); 'second baseline'
+# skip upsampled rendering, retain upsampled scores
+#python -m src.main_4 +experiment=dl3dv \
+#mode=test \
+#dataset.roots=[datasets_extra/dl3dv_480p] \
+#dataset/view_sampler=evaluation \
+#dataset.test_chunk_interval=1 \
+#dataset.view_sampler.num_context_views=2 \
+#dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_10_ctx_2v_tgt_4v.json \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_model=checkpoints/2025-09-09_train002_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch/checkpoints/epoch_36-step_600000.ckpt \
+#test.save_video=false \
+#test.compute_scores=true \
+#test.save_image_upsampled=false \
+#test.skip_upsampled_scores=false \
+#test.save_depth=true \
+#test.save_depth_concat_img=true \
+#test.save_grid_comparisons=true \
+#test.save_grid_comparisons_downsampled=true \
+#test.save_grid_comparisons_upsampled=true \
+#test.depth_mode=depth \
+#output_dir=outputs/2025-09-29_test-001_dl3dv-2x256x448-2x512x896-zs-simt_depthsplat-Small-3DLPF-2DMip-Fullscratch \
+#2>&1 | tee outputs/2025-09-29_test-001_dl3dv-2x256x448-2x512x896-zs-simt_depthsplat-Small-3DLPF-2DMip-Fullscratch.log
+
+# RE10k 256x256 --> DL3DV 256x448 zero-shot full test set
+# Full mip-splatting + depthsplat (Small); 'second baseline'
+# skip upsampled rendering, retain upsampled scores
+# no model pass; just checking camera trajectories
+#python -m src.main_4 +experiment=dl3dv \
+#mode=test \
+#dataset.roots=[datasets_extra/dl3dv_480p] \
+#dataset/view_sampler=evaluation \
+#dataset.test_chunk_interval=1 \
+#dataset.view_sampler.num_context_views=2 \
+#dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_10_ctx_2v_tgt_4v.json \
+#model.encoder.name=depthsplat_lpf \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#model.encoder.gaussian_adapter.compensate_opacities=false \
+#model.decoder.name=splatting_cuda_anysplat \
+#model.decoder.rasterize_mode=antialiased \
+#model.decoder.eps2d=0.1 \
+#checkpointing.pretrained_model=checkpoints/2025-09-09_train002_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch/checkpoints/epoch_36-step_600000.ckpt \
+#test.save_video=false \
+#test.compute_scores=true \
+#test.save_image_upsampled=false \
+#test.skip_upsampled_scores=false \
+#test.save_depth=true \
+#test.save_depth_concat_img=true \
+#test.save_grid_comparisons=true \
+#test.save_grid_comparisons_downsampled=true \
+#test.save_grid_comparisons_upsampled=true \
+#test.depth_mode=depth \
+#output_dir=outputs/2025-09-29_test-002_dl3dv-2x256x448-2x512x896_camera-pose-check \
+#2>&1 | tee outputs/2025-09-29_test-002_dl3dv-2x256x448-2x512x896_camera-pose-check.log
+
+# RE10k 256x256 --> DL3DV 256x448 zero-shot full test set
+# Full mip-splatting + depthsplat (Small); 'second baseline'
+# skip upsampled rendering, retain upsampled scores
+# just one scene
+python -m src.main_4 +experiment=dl3dv \
 mode=test \
 dataset.roots=[datasets_extra/dl3dv_480p] \
 dataset/view_sampler=evaluation \
+dataset.test_chunk_interval=1 \
 dataset.view_sampler.num_context_views=2 \
-dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_50_ctx_2v_video_0_50.json \
-model.encoder.num_scales=2 \
+dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_10_ctx_2v_tgt_4v.json \
+dataset.overfit_to_scene=06da796666297fe4c683c231edf56ec00148a6a52ab5bb159fe1be31f53a58df \
+model.encoder.name=depthsplat_lpf \
 model.encoder.upsample_factor=4 \
-model.encoder.lowest_feature_resolution=8 \
-model.encoder.monodepth_vit_type=vitb \
-checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-randview2-6-02c7b19d.pth \
+model.encoder.lowest_feature_resolution=4 \
+model.encoder.gaussian_adapter.compensate_opacities=false \
+model.decoder.name=splatting_cuda_anysplat \
+model.decoder.rasterize_mode=antialiased \
+model.decoder.eps2d=0.1 \
+checkpointing.pretrained_model=checkpoints/2025-09-09_train002_re10k-256x256_depthsplat-Small-3DLPF-2DMip-Fullscratch/checkpoints/epoch_36-step_600000.ckpt \
 test.save_video=false \
 test.compute_scores=true \
 test.save_image_upsampled=false \
-test.skip_upsampled_scores=true \
+test.skip_upsampled_scores=false \
 test.save_depth=true \
 test.save_depth_concat_img=true \
 test.save_grid_comparisons=true \
-test.depth_mode=depth \
 test.save_grid_comparisons_downsampled=true \
-test.save_gaussian=true \
-output_dir=outputs/2025-09-24_test-005_dl3dv-id-2x256x448-simt_depthsplat-modelzoo-Base_detailed-results \
-2>&1 | tee outputs/2025-09-24_test-005_dl3dv-id-2x256x448-simt_depthsplat-modelzoo-Base_detailed-results.log
+test.save_grid_comparisons_upsampled=true \
+test.depth_mode=depth \
+output_dir=outputs/2025-09-29_test-003_dl3dv-2x256x448-2x512x896-zs-simt-subset_depthsplat-Small-3DLPF-2DMip-Fullscratch \
+2>&1 | tee outputs/2025-09-29_test-003_dl3dv-2x256x448-2x512x896-zs-simt-subset_depthsplat-Small-3DLPF-2DMip-Fullscratch.log
 
-# Base Model, RE10K 2x256x256 -> DL3DV {2,3,4,5,6}x256x448 vs DL3DV 4x256x448
-python -m src.main_3 +experiment=dl3dv \
-mode=test \
-dataset.roots=[datasets_extra/dl3dv_480p] \
-dataset/view_sampler=evaluation \
-dataset.view_sampler.num_context_views=4 \
-dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_50_ctx_4v_video_0_50.json \
-model.encoder.num_scales=2 \
-model.encoder.upsample_factor=4 \
-model.encoder.lowest_feature_resolution=8 \
-model.encoder.monodepth_vit_type=vitb \
-checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-randview2-6-02c7b19d.pth \
-test.save_video=false \
-test.compute_scores=true \
-test.save_image_upsampled=false \
-test.skip_upsampled_scores=true \
-test.save_depth=true \
-test.save_depth_concat_img=true \
-test.save_grid_comparisons=true \
-test.depth_mode=depth \
-test.save_grid_comparisons_downsampled=true \
-test.save_gaussian=true \
-output_dir=outputs/2025-09-24_test-006_dl3dv-id-4x256x448-simt_depthsplat-modelzoo-Base_detailed-results \
-2>&1 | tee outputs/2025-09-24_test-006_dl3dv-id-4x256x448-simt_depthsplat-modelzoo-Base_detailed-results.log
-
-# Base Model, RE10K 2x256x256 -> DL3DV {2,3,4,5,6}x256x448 vs DL3DV 4x256x448
-python -m src.main_3 +experiment=dl3dv \
-mode=test \
-dataset.roots=[datasets_extra/dl3dv_480p] \
-dataset/view_sampler=evaluation \
-dataset.view_sampler.num_context_views=6 \
-dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_50_ctx_6v_video_0_50.json \
-model.encoder.num_scales=2 \
-model.encoder.upsample_factor=4 \
-model.encoder.lowest_feature_resolution=8 \
-model.encoder.monodepth_vit_type=vitb \
-checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-randview2-6-02c7b19d.pth \
-test.save_video=false \
-test.compute_scores=true \
-test.save_image_upsampled=false \
-test.skip_upsampled_scores=true \
-test.save_depth=true \
-test.save_depth_concat_img=true \
-test.save_grid_comparisons=true \
-test.depth_mode=depth \
-test.save_grid_comparisons_downsampled=true \
-test.save_gaussian=true \
-output_dir=outputs/2025-09-25_test-001_dl3dv-id-6x256x448-simt_depthsplat-modelzoo-Base_detailed-results \
-2>&1 | tee outputs/2025-09-25_test-001_dl3dv-id-6x256x448-simt_depthsplat-modelzoo-Base_detailed-results.log
+# RE10k 256x256 --> DL3DV 256x448 zero-shot full test set
+# vanilla modelzoo depthsplat (Small); 'first baseline'
+# skip upsampled rendering, retain upsampled scores
+#python -m src.main_3 +experiment=dl3dv \
+#mode=test \
+#dataset.roots=[datasets_extra/dl3dv_480p] \
+#dataset/view_sampler=evaluation \
+#dataset.test_chunk_interval=1 \
+#dataset.view_sampler.num_context_views=2 \
+#dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_10_ctx_2v_tgt_4v.json \
+#model.encoder.upsample_factor=4 \
+#model.encoder.lowest_feature_resolution=4 \
+#checkpointing.pretrained_model=pretrained/depthsplat-gs-small-re10k-256x256-view2-cfeab6b1.pth \
+#test.save_video=false \
+#test.compute_scores=true \
+#test.save_image_upsampled=false \
+#test.skip_upsampled_scores=false \
+#output_dir=outputs/2025-09-14_test-006_dl3dv-256x448-2v-zs-simt_depthsplat-Small-modelzoo \
+#2>&1 | tee outputs/2025-09-14_test-006_dl3dv-256x448-2v-zs-simt_depthsplat-Small-modelzoo.log

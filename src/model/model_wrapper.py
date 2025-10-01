@@ -18,6 +18,7 @@ import time
 from tqdm import tqdm
 import torch.nn.functional as F
 import math
+from typing import Generic, Literal, TypeVar
 
 from ..dataset.data_module import get_data_shim
 from ..dataset.types import BatchedExample
@@ -77,6 +78,22 @@ class TestCfg:
     render_chunk_size: int | None
     stablize_camera: bool
     stab_camera_kernel: int
+    # new additions
+    save_image_upsampled: bool
+    skip_upsampled_scores: bool
+    save_grid_comparisons: bool
+    depth_mode: DepthRenderingMode
+    #save_grid_comparisons_depths: bool
+    save_grid_comparisons_downsampled: bool
+    save_grid_comparisons_upsampled: bool
+    #pseudogt_downsample_mode: str
+
+
+PseudoGTDownsampleMode = Literal[
+    "lanczos",
+    "gaussian_bilinear",
+    "mipnerf360_esque",
+]
 
 
 @dataclass
